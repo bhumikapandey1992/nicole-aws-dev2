@@ -1,0 +1,10 @@
+
+-- Add donor email tracking table
+CREATE TABLE donor_activity_tracking (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+donor_id INTEGER NOT NULL,
+participant_id INTEGER NOT NULL,
+last_visit TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

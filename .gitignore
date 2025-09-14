@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Node / build
+node_modules/
+dist/
+dist-*/
+*.log
+coverage/
+.vite/
+
+# Cloudflare Wrangler
+.wrangler/state/
+.wrangler/deploy/
+.dev.vars
+
+# Env / secrets
+.env
+.env.*

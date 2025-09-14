@@ -1,0 +1,58 @@
+{
+  "name": "Brain Fog Recovery Source - Metabolic Challenges",
+  "short_name": "BFRS Challenges",
+  "description": "Turn metabolic challenges into funds for psychiatric recovery support through Brain Fog Recovery Source",
+  "theme_color": "#84cc16",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/",
+  "id": "/",
+  "icons": [
+    {
+      "src": "https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["health", "fitness", "fundraising"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Start Challenge",
+      "short_name": "New Challenge",
+      "description": "Create a new metabolic challenge to raise funds",
+      "url": "/create-participant",
+      "icons": [
+        {
+          "src": "https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg",
+          "sizes": "192x192",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your fundraising dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg",
+          "sizes": "192x192",
+          "type": "image/jpeg"
+        }
+      ]
+    }
+  ],
+  "lang": "en-US",
+  "dir": "ltr"
+}

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0" />
+    
+    <!-- Primary Meta Tags -->
+    <title>Brain Fog Recovery Source - Metabolic Challenges</title>
+    <meta name="title" content="Brain Fog Recovery Source - Metabolic Challenges" />
+    <meta name="description" content="Take on metabolic health challenges to fund psychiatric recovery support through ketogenic and metabolic therapies. Turn your fitness goals into fundraising for mental health access." />
+    <meta name="keywords" content="metabolic challenges, psychiatric recovery, ketogenic therapy, mental health, fundraising, brain fog, metabolic psychiatry" />
+    <meta name="author" content="Brain Fog Recovery Source" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://z3icvhmcbyele.mocha.app/" />
+    <meta property="og:title" content="Brain Fog Recovery Source - Metabolic Challenges" />
+    <meta property="og:description" content="Take on metabolic health challenges to fund psychiatric recovery support through ketogenic and metabolic therapies." />
+    <meta property="og:image" content="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg?v=20250804194207&slack=1" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:secure_url" content="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg?v=20250804194207&slack=1" />
+    <meta property="og:updated_time" content="2025-08-04T19:42:07Z" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://z3icvhmcbyele.mocha.app/" />
+    <meta property="twitter:title" content="Brain Fog Recovery Source - Metabolic Challenges" />
+    <meta property="twitter:description" content="Take on metabolic health challenges to fund psychiatric recovery support through ketogenic and metabolic therapies." />
+    <meta property="twitter:image" content="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg?v=20250804194207&slack=1" />
+    <meta property="twitter:image:alt" content="Brain Fog Recovery Source Logo" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#86efac" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="BFRS Challenges" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/app-icon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/app-icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/app-icon-512.png" />
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Performance: DNS prefetch for likely external resources -->
+    <link rel="dns-prefetch" href="//accounts.google.com" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    
+    <!-- Vite HMR fix for sandbox environments -->
+    <script src="/vite-hmr-fix.js"></script>
+    
+    <!-- Loading optimization -->
+    <style>
+      /* Critical CSS for loading state */
+      #loading-fallback {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #86efac;
+        border-top: 4px solid #22c55e;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .loading-text {
+        margin-top: 16px;
+        color: #374151;
+        font-size: 18px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Fallback loading state -->
+      <div id="loading-fallback">
+        <div style="text-align: center;">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading Brain Fog Recovery Source...</div>
+        </div>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/react-app/main.tsx"></script>
+    
+    <!-- Remove loading fallback once app loads -->
+    <script>
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const fallback = document.getElementById('loading-fallback');
+          if (fallback) {
+            fallback.style.opacity = '0';
+            fallback.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(() => fallback.remove(), 300);
+          }
+        }, 100);
+      });
+    </script>
+  </body>
+</html>

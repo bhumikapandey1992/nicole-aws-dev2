@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "019870bf-4695-74f8-b344-315629bf7f9f",
+  "main": "./src/worker/index.ts",
+  "compatibility_date": "2025-06-17",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+  },
+  "upload_source_maps": true,
+  
+  
+  "triggers": {
+    "crons": [
+      "0 9 * * MON"
+    ]
+  },
+  
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bfrs-staging",
+      "database_id": "8b30ad54-35d9-45e3-96e6-003e7772f0b5",
+    },
+  ],
+}

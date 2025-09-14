@@ -1,0 +1,25 @@
+name = "bfrs-staging"
+main = "dist/worker/index.js"
+compatibility_date = "2024-09-01"
+workers_dev = true
+
+# Serve your built Vite assets (adjust if your build path differs)
+assets = { directory = "dist/client" }
+
+# Default D1 binding (can be overridden per env if you want)
+[[d1_databases]]
+binding = "DB"
+database_name = "bfrs-staging"
+database_id = "8b30ad54-35d9-45e3-96e6-003e7772f0b5"
+
+[env.staging]
+name = "bfrs-staging"
+workers_dev = true
+
+[env.staging.vars]
+# Not secret, fine to live as VARs
+AWS_SES_REGION = "us-east-2"
+SENDER_FROM = "Brain Fog Recovery Source <nonprofit@mentalhealthketo.com>"
+BUILD_ID = "staging"
+# TEMP: because some routes still check this, set a dummy value to bypass the old SendGrid check
+SENDGRID_API_KEY = "dummy"

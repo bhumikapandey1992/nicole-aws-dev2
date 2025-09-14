@@ -1,0 +1,5 @@
+
+DROP TABLE user_push_subscriptions;
+DROP TABLE user_notification_preferences;
+DROP TABLE participant_notification_preferences;
+DROP TABLE donor_notification_preferences;

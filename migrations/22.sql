@@ -1,0 +1,1 @@
+UPDATE participants SET challenge_type_id = 68 WHERE id = 1;
