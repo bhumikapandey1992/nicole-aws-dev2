@@ -1839,8 +1839,11 @@ app.post("/wapi/test-my-email-reminder", authMiddleware, async (c) => {
   try {
     const user = c.get("user");
     
-    if (!c.env.SENDGRID_API_KEY) {
+    /*if (!c.env.SENDGRID_API_KEY) {
       return c.json({ error: "SendGrid not configured" }, 500);
+    }*/
+     if (!c.env.AWS_SES_REGION || !c.env.AWS_ACCESS_KEY_ID || !c.env.AWS_SECRET_ACCESS_KEY || !c.env.SENDER_FROM) {
+     return c.json({ error: "SES not configured" }, 500);
     }
 
     console.log('Testing email reminder for user:', user!.email);

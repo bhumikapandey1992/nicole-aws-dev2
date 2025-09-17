@@ -20,13 +20,23 @@ const EMPTY_MESSAGES: Record<string, string> = {
   "empty": "Nothing here yet — create your first item!",
 };
 
-type EmptyCtx = { message: string | null; setMessage: (m: string | null) => void };
-const EmptyReasonContext = createContext<EmptyCtx>({ message: null, setMessage: () => {} });
+type EmptyCtx = {
+  message: string | null;
+  setMessage: (m: string | null) => void;
+  allowGlobal: boolean;
+  setAllowGlobal: (v: boolean) => void;
+};
+
+const EmptyReasonContext = createContext<EmptyCtx>({
+  message: null, setMessage: () => {},
+  allowGlobal: false, setAllowGlobal: () => {}
+});
 
 function EmptyReasonProvider({ children }: PropsWithChildren<{}>) {
   const [message, setMessage] = useState<string | null>(null);
+  const [allowGlobal, setAllowGlobal] = useState(false);
   return (
-    <EmptyReasonContext.Provider value={{ message, setMessage }}>
+    <EmptyReasonContext.Provider value={{ message, setMessage, allowGlobal, setAllowGlobal }}>
       {children}
       <FriendlyEmptyToast />
     </EmptyReasonContext.Provider>
@@ -44,26 +54,48 @@ function useEmptyReason() {
  */
 function FetchHeaderInterceptor() {
   const { setMessage } = useEmptyReason();
+  const { setAllowGlobal } = useEmptyReason();
+  useEffect(() => { setAllowGlobal(true); return () => setAllowGlobal(false); }, [setAllowGlobal]);
   const lastReasonRef = useRef<string | null>(null);
 
   useEffect(() => {
     const originalFetch = window.fetch;
+
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const res = await originalFetch(input as any, init);
-      const reason = res.headers.get("x-empty-reason");
-      if (reason && reason !== lastReasonRef.current) {
-        lastReasonRef.current = reason;
-        setMessage(EMPTY_MESSAGES[reason] ?? "We’re getting things ready. Try again shortly.");
+
+      try {
+        // Normalize URL
+        const url = typeof input === "string" ? new URL(input, window.location.origin)
+                 : input instanceof URL ? input
+                 : new URL((input as Request).url, window.location.origin);
+
+        const isApi = url.origin === window.location.origin &&
+                      (url.pathname.startsWith("/wapi/") || url.pathname.startsWith("/api/"));
+        const isGet = (init?.method ?? (input as any)?.method ?? "GET").toUpperCase() === "GET";
+        const ok = res.status >= 200 && res.status < 300;
+
+        const reason = res.headers.get("x-empty-reason");
+        const display = res.headers.get("x-empty-display"); // "global" | "inline" | null
+
+        // Only show global toast for explicit requests
+        if (isApi && isGet && ok && reason && display === "global" && reason !== lastReasonRef.current) {
+          lastReasonRef.current = reason;
+          setMessage(EMPTY_MESSAGES[reason] ?? "We’re getting things ready. Try again shortly.");
+        }
+      } catch {
+        // ignore parsing issues
       }
+
       return res;
     };
-    return () => {
-      window.fetch = originalFetch;
-    };
+
+    return () => { window.fetch = originalFetch; };
   }, [setMessage]);
 
   return null;
 }
+
 
 function FriendlyEmptyToast() {
   const { message, setMessage } = useEmptyReason();
