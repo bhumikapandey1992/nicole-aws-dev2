@@ -61,18 +61,68 @@ function FetchHeaderInterceptor() {
   useEffect(() => {
     const originalFetch = window.fetch;
 
+    const devBypassEnabled = () => {
+      try {
+        // Enable bypass in dev builds or when localStorage flag is set
+        const ls = localStorage.getItem('bypassAuth');
+        // Vite dev flag and an optional env override
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const env: any = (import.meta as any)?.env || {};
+        return (env?.DEV === true) || env?.VITE_BYPASS_AUTH === 'true' || ls === 'true';
+      } catch {
+        return false;
+      }
+    };
+
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      // Normalize URL and method up-front to support bypass early returns
+      let url: URL;
+      try {
+        url = typeof input === "string" ? new URL(input, window.location.origin)
+          : input instanceof URL ? input
+          : new URL((input as Request).url, window.location.origin);
+      } catch {
+        // Fallback to default behavior if URL can't be parsed
+        return originalFetch(input as any, init);
+      }
+      const method = (init?.method ?? (input as any)?.method ?? "GET").toUpperCase();
+      const isSameOriginApi = url.origin === window.location.origin && (url.pathname.startsWith('/wapi/') || url.pathname.startsWith('/api/'));
+
+      // Client-side auth bypass for local/dev: fake the current user and login URL
+      if (devBypassEnabled() && isSameOriginApi && method === 'GET') {
+        if (url.pathname === '/api/users/me' || url.pathname === '/wapi/users/me') {
+          const now = new Date().toISOString();
+          const devUser = {
+            id: '1',
+            email: 'dev@example.com',
+            google_sub: 'dev-sub',
+            google_user_data: {
+              email: 'dev@example.com',
+              email_verified: true,
+              family_name: null,
+              given_name: 'Dev',
+              hd: null,
+              name: 'Dev User',
+              picture: null,
+              sub: 'dev-sub',
+            },
+            last_signed_in_at: now,
+            created_at: now,
+            updated_at: now,
+            authenticated: true,
+          };
+          return new Response(JSON.stringify(devUser), { headers: { 'content-type': 'application/json' }, status: 200 });
+        }
+        if (url.pathname === '/wapi/oauth/google/redirect_url') {
+          return new Response(JSON.stringify({ redirectUrl: '/dashboard', bypass: true }), { headers: { 'content-type': 'application/json' }, status: 200 });
+        }
+      }
+
       const res = await originalFetch(input as any, init);
 
       try {
-        // Normalize URL
-        const url = typeof input === "string" ? new URL(input, window.location.origin)
-                 : input instanceof URL ? input
-                 : new URL((input as Request).url, window.location.origin);
-
-        const isApi = url.origin === window.location.origin &&
-                      (url.pathname.startsWith("/wapi/") || url.pathname.startsWith("/api/"));
-        const isGet = (init?.method ?? (input as any)?.method ?? "GET").toUpperCase() === "GET";
+        const isApi = isSameOriginApi;
+        const isGet = method === 'GET';
         const ok = res.status >= 200 && res.status < 300;
 
         const reason = res.headers.get("x-empty-reason");

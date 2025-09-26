@@ -2,7 +2,6 @@ import { useAuth } from '@getmocha/users-service/react';
 import { Navigate, Link } from 'react-router';
 import { useState, useEffect } from 'react';
 import { Target, Users, Heart, ArrowRight, TrendingUp, Zap, Star, Snowflake, Activity, Clock, Salad, Brain, Sun } from 'lucide-react';
-
 export default function Home() {
   const { user, isPending } = useAuth();
   const [stats, setStats] = useState({ participants: 0, raised: 0 });

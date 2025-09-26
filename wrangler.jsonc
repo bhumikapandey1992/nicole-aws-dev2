@@ -9,7 +9,14 @@
   },
   "upload_source_maps": true,
   
-  
+  // Dev auth override for local/staging
+  "vars": {
+    "DEV_AUTH": "true",
+    "DEV_USER_EMAIL": "dev@example.com",
+    "DEV_USER_NAME": "Dev User",
+    "DEV_USER_ID": "1"
+  },
+
   "triggers": {
     "crons": [
       "0 9 * * MON"

@@ -12,6 +12,13 @@ binding = "DB"
 database_name = "bfrs-staging"
 database_id = "8b30ad54-35d9-45e3-96e6-003e7772f0b5"
 
+# Global vars (applies to wrangler dev)
+[vars]
+DEV_AUTH = "true"
+DEV_USER_EMAIL = "dev@example.com"
+DEV_USER_NAME = "Dev User"
+DEV_USER_ID = "1"
+
 [env.staging]
 name = "bfrs-staging"
 workers_dev = true
@@ -23,3 +30,8 @@ SENDER_FROM = "Brain Fog Recovery Source <nonprofit@mentalhealthketo.com>"
 BUILD_ID = "staging"
 # TEMP: because some routes still check this, set a dummy value to bypass the old SendGrid check
 SENDGRID_API_KEY = "dummy"
+# Enable dev auth on staging too
+DEV_AUTH = "true"
+DEV_USER_EMAIL = "dev@example.com"
+DEV_USER_NAME = "Dev User"
+DEV_USER_ID = "1"

@@ -133,73 +133,61 @@
     };
   }
   
-  // Override WebSocket to handle connection failures gracefully
+  // Override WebSocket to handle connection failures gracefully using a Proxy
   const OriginalWebSocket = window.WebSocket;
-  
-  window.WebSocket = function(url, protocols) {
-    // Don't attempt WebSocket connections to localhost in sandbox environments
-    if (url && (url.includes('localhost') || url.includes('127.0.0.1')) && isSandboxEnvironment) {
-      // Return a more complete mock WebSocket that won't actually connect
-      const mockSocket = {
-        readyState: 3, // CLOSED
-        url: url,
-        protocol: '',
-        extensions: '',
-        bufferedAmount: 0,
-        binaryType: 'blob',
-        
-        // Event handlers
-        onopen: null,
-        onmessage: null,
-        onerror: null,
-        onclose: null,
-        
-        // Methods
-        close: function(code, reason) {
-          if (this.onclose) {
-            this.onclose({ code: code || 1000, reason: reason || 'Mock close' });
-          }
-        },
-        send: function(data) {
-          // Silently ignore sends
-        },
-        addEventListener: function(type, listener, options) {
-          // Store event listeners but don't actually use them
-        },
-        removeEventListener: function(type, listener, options) {
-          // Mock remove event listener
-        },
-        dispatchEvent: function(event) { 
-          return true; 
-        }
-      };
-      
-      // Immediately trigger close event to indicate connection failed
-      setTimeout(() => {
-        if (mockSocket.onclose) {
-          mockSocket.onclose({ 
-            code: 1006, 
-            reason: 'Sandbox environment - WebSocket blocked',
-            wasClean: false 
-          });
-        }
-      }, 0);
-      
-      return mockSocket;
+
+  function createMockSocket(url) {
+    const mockSocket = {
+      readyState: 3, // CLOSED
+      url: url,
+      protocol: '',
+      extensions: '',
+      bufferedAmount: 0,
+      binaryType: 'blob',
+      // Event handlers
+      onopen: null,
+      onmessage: null,
+      onerror: null,
+      onclose: null,
+      // Methods
+      close(code, reason) {
+        if (this.onclose) this.onclose({ code: code || 1000, reason: reason || 'Mock close' });
+      },
+      send(_) { /* no-op */ },
+      addEventListener(_type, _listener, _options) { /* no-op */ },
+      removeEventListener(_type, _listener, _options) { /* no-op */ },
+      dispatchEvent(_event) { return true; }
+    };
+    // Immediately trigger close to indicate connection failed
+    setTimeout(() => {
+      mockSocket.readyState = 3;
+      if (mockSocket.onclose) {
+        mockSocket.onclose({ code: 1006, reason: 'Sandbox environment - WebSocket blocked', wasClean: false });
+      }
+    }, 0);
+    return mockSocket;
+  }
+
+  const WebSocketProxy = new Proxy(OriginalWebSocket, {
+    construct(target, args) {
+      const [url] = args;
+      if (url && typeof url === 'string' && (url.includes('localhost') || url.includes('127.0.0.1')) && isSandboxEnvironment) {
+        return createMockSocket(url);
+      }
+      return new target(...args);
+    },
+    apply(target, _thisArg, args) { // Support calling without new (rare)
+      return new target(...args);
+    },
+    get(target, prop, receiver) {
+      // Forward static props (CONNECTING, OPEN, etc.) safely
+      return Reflect.get(target, prop, receiver);
     }
-    
-    // For other WebSocket connections, use the original
-    return new OriginalWebSocket(url, protocols);
-  };
-  
-  // Copy static properties and prototype
-  Object.setPrototypeOf(window.WebSocket, OriginalWebSocket);
-  window.WebSocket.prototype = OriginalWebSocket.prototype;
-  window.WebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
-  window.WebSocket.OPEN = OriginalWebSocket.OPEN;
-  window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
-  window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
-  
+  });
+
+  // Replace global WebSocket with the proxy (no direct property writes on the function)
+  window.WebSocket = WebSocketProxy;
+
   // Ultra-aggressive TSS and history manipulation protection
   let historyReplaceCount = 0;
   let lastReplaceTime = 0;
@@ -334,7 +322,7 @@
   window.setTimeout = function(callback, delay, ...args) {
     const callbackStr = callback?.toString() || '';
     if (callbackStr.includes('TSS') || callbackStr.includes('injection') || 
-        callbackStr.includes('history') && delay < 100) {
+        (callbackStr.includes('history') && delay < 100)) {
       return -1; // Block rapid history manipulation timers
     }
     return originalSetTimeout.call(this, callback, delay, ...args);
@@ -343,7 +331,7 @@
   window.setInterval = function(callback, delay, ...args) {
     const callbackStr = callback?.toString() || '';
     if (callbackStr.includes('TSS') || callbackStr.includes('injection') || 
-        callbackStr.includes('history') && delay < 1000) {
+        (callbackStr.includes('history') && delay < 1000)) {
       return -1; // Block rapid history manipulation intervals
     }
     return originalSetInterval.call(this, callback, delay, ...args);
