@@ -49,6 +49,9 @@ type Env = {
 
   // Internal call auth for cron endpoints
   NOTIFICATION_API_KEY?: string;
+
+  // KV for recent activity feed
+  ACTIVITIES?: KVNamespace;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,9 +60,9 @@ type Env = {
 
 const isDevAuth = (env: Env) => {
   const v = (env as any).DEV_AUTH;
-  if (typeof v === 'string') {
+  if (typeof v === "string") {
     const s = v.toLowerCase().trim();
-    return s === 'true' || s === '1';
+    return s === "true" || s === "1";
   }
   return !!v;
 };
@@ -68,13 +71,19 @@ function isSchemaMissing(err: unknown) {
   return err instanceof Error && /no such table|no such column/i.test(err.message);
 }
 
-function emptyList(c: Context<{ Bindings: Env }>, reason: string = "empty"): Response {
+function emptyList(
+    c: Context<{ Bindings: Env }>,
+    reason: string = "empty",
+): Response {
   c.header("X-Empty-Reason", reason);
   return c.json([] as unknown[], 200);
 }
 
 // Dev-auth wrapper: seeds a fake user when DEV_AUTH=true
-const authMiddleware = async (c: Context<{ Bindings: Env }>, next: Next) => {
+const authMiddleware = async (
+    c: Context<{ Bindings: Env }>,
+    next: Next,
+) => {
   if (isDevAuth(c.env)) {
     const now = new Date().toISOString();
     const devUser: MochaUser = {
@@ -85,7 +94,8 @@ const authMiddleware = async (c: Context<{ Bindings: Env }>, next: Next) => {
         email: c.env.DEV_USER_EMAIL || "dev@example.com",
         email_verified: true,
         family_name: null,
-        given_name: (c.env.DEV_USER_NAME || "Dev User").split(" ").slice(-1)[0] || null,
+        given_name:
+            (c.env.DEV_USER_NAME || "Dev User").split(" ").slice(-1)[0] || null,
         hd: null,
         name: c.env.DEV_USER_NAME || "Dev User",
         picture: null,
@@ -125,7 +135,10 @@ app.onError((err, c) => {
     }
 
     if (path.startsWith("/wapi/user-notification-preferences")) {
-      return c.json({ email_challenge_reminders: false, email_donor_updates: false }, 200);
+      return c.json(
+          { email_challenge_reminders: false, email_donor_updates: false },
+          200,
+      );
     }
     if (path.startsWith("/wapi/reminder-check")) {
       return c.json({ showReminder: false }, 200);
@@ -134,11 +147,14 @@ app.onError((err, c) => {
     return c.json({ ok: true, empty: true, reason: "schema-missing" }, 200);
   }
 
-  return c.json({ error: "Internal error", details: (err as Error).message }, 500);
+  return c.json(
+      { error: "Internal error", details: (err as Error).message },
+      500,
+  );
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Priority routes / basic infra
+/** Priority routes / basic infra */
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.use(
@@ -147,17 +163,19 @@ app.use(
       origin: "*",
       allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],
-    })
+    }),
 );
 
 app.get("/health", (c) => {
   const build = c.env.BUILD_ID ?? "dev";
   const today = new Date().toISOString().slice(0, 10);
-  return new Response(`alive build=${build} date=${today}`, { headers: { "content-type": "text/plain" } });
+  return new Response(`alive build=${build} date=${today}`, {
+    headers: { "content-type": "text/plain" },
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Auth routes (Option A short-circuit)
+/** Auth routes (Option A short-circuit) */
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.get("/wapi/oauth/google/redirect_url", async (c) => {
@@ -165,9 +183,15 @@ app.get("/wapi/oauth/google/redirect_url", async (c) => {
     if (isDevAuth(c.env)) return c.json({ redirectUrl: "/dev-login" }, 200);
 
     const stateParam = c.req.query("state");
-    if (!c.env.MOCHA_USERS_SERVICE_API_URL || !c.env.MOCHA_USERS_SERVICE_API_KEY) {
+    if (
+        !c.env.MOCHA_USERS_SERVICE_API_URL ||
+        !c.env.MOCHA_USERS_SERVICE_API_KEY
+    ) {
       // Fallback to dev login when not configured, to avoid blocking local/staging
-      return c.json({ redirectUrl: "/dev-login", debugInfo: "MISSING_AUTH_CONFIG_DEV_REDIRECT" }, 200);
+      return c.json(
+          { redirectUrl: "/dev-login", debugInfo: "MISSING_AUTH_CONFIG_DEV_REDIRECT" },
+          200,
+      );
     }
 
     const redirectUrl = await getOAuthRedirectUrl("google", {
@@ -192,18 +216,26 @@ app.post("/wapi/sessions", async (c) => {
       const isSecure = c.req.url.startsWith("https://");
       c.header(
           "Set-Cookie",
-          `${MOCHA_SESSION_TOKEN_COOKIE_NAME}=${token}; Path=/; HttpOnly; ${isSecure ? "Secure; " : ""}SameSite=Lax; Max-Age=${
-              60 * 24 * 60 * 60
-          }`
+          `${MOCHA_SESSION_TOKEN_COOKIE_NAME}=${token}; Path=/; HttpOnly; ${isSecure ? "Secure; " : ""}SameSite=Lax; Max-Age=${60 * 24 * 60 * 60}`,
       );
       return c.json({ success: true, debugInfo: "DEV_AUTH_BYPASS" }, 200);
     }
 
     const body = (await c.req.json().catch(() => ({}))) as { code?: string };
-    if (!body.code?.trim()) return c.json({ error: "No authorization code provided", debugInfo: "CALLBACK_NO_CODE" }, 400);
+    if (!body.code?.trim())
+      return c.json(
+          { error: "No authorization code provided", debugInfo: "CALLBACK_NO_CODE" },
+          400,
+      );
 
-    if (!c.env.MOCHA_USERS_SERVICE_API_URL || !c.env.MOCHA_USERS_SERVICE_API_KEY) {
-      return c.json({ error: "Authentication service configuration error", debugInfo: "CALLBACK_MISSING_ENV" }, 500);
+    if (
+        !c.env.MOCHA_USERS_SERVICE_API_URL ||
+        !c.env.MOCHA_USERS_SERVICE_API_KEY
+    ) {
+      return c.json(
+          { error: "Authentication service configuration error", debugInfo: "CALLBACK_MISSING_ENV" },
+          500,
+      );
     }
 
     let sessionToken: string | null = null;
@@ -225,26 +257,28 @@ app.post("/wapi/sessions", async (c) => {
     if (!sessionToken) {
       return c.json(
           {
-            error: "Failed to create session token - authentication service may be temporarily unavailable",
+            error:
+                "Failed to create session token - authentication service may be temporarily unavailable",
             debugInfo: "TOKEN_EXCHANGE_EMPTY_RESPONSE",
             lastError: lastError instanceof Error ? lastError.message : String(lastError),
           },
-          500
+          500,
       );
     }
 
     const isSecure = c.req.url.startsWith("https://");
     c.header(
         "Set-Cookie",
-        `${MOCHA_SESSION_TOKEN_COOKIE_NAME}=${sessionToken}; Path=/; HttpOnly; ${isSecure ? "Secure; " : ""}SameSite=Lax; Max-Age=${
-            60 * 24 * 60 * 60
-        }`
+        `${MOCHA_SESSION_TOKEN_COOKIE_NAME}=${sessionToken}; Path=/; HttpOnly; ${isSecure ? "Secure; " : ""}SameSite=Lax; Max-Age=${60 * 24 * 60 * 60}`,
     );
 
     return c.json({ success: true }, 200);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    return c.json({ error: `Authentication failed. ${msg}`, debugInfo: "CALLBACK_UNEXPECTED_ERROR" }, 500);
+    return c.json(
+        { error: `Authentication failed. ${msg}`, debugInfo: "CALLBACK_UNEXPECTED_ERROR" },
+        500,
+    );
   }
 });
 
@@ -297,12 +331,15 @@ app.get("/wapi/logout", async (c) => {
       console.warn("Failed to delete session on server:", e);
     }
   }
-  c.header("Set-Cookie", `${MOCHA_SESSION_TOKEN_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
+  c.header(
+      "Set-Cookie",
+      `${MOCHA_SESSION_TOKEN_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`,
+  );
   return c.json({ success: true }, 200);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Catalog endpoints used by UI
+/** Catalog endpoints used by UI */
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.get("/wapi/challenge-categories", async (c) => {
@@ -310,7 +347,7 @@ app.get("/wapi/challenge-categories", async (c) => {
     const { results } = await c.env.DB.prepare(`
       SELECT cc.*, COUNT(ct.id) as challenge_count
       FROM challenge_categories cc
-      LEFT JOIN challenge_types ct ON cc.id = ct.category_id
+             LEFT JOIN challenge_types ct ON cc.id = ct.category_id
       GROUP BY cc.id
       ORDER BY cc.name
     `).all();
@@ -326,11 +363,12 @@ app.get("/wapi/challenge-categories", async (c) => {
 
 app.get("/wapi/challenge-types/:categoryId", async (c) => {
   const categoryId = c.req.param("categoryId");
-  if (!categoryId || isNaN(Number(categoryId))) return c.json({ error: "Invalid category ID" }, 400);
+  if (!categoryId || isNaN(Number(categoryId)))
+    return c.json({ error: "Invalid category ID" }, 400);
 
   try {
     const { results } = await c.env.DB.prepare(
-        `SELECT * FROM challenge_types WHERE category_id = ? ORDER BY is_custom ASC, name ASC`
+        `SELECT * FROM challenge_types WHERE category_id = ? ORDER BY is_custom ASC, name ASC`,
     )
         .bind(categoryId)
         .all();
@@ -350,23 +388,33 @@ app.post(
     zValidator("json", CreateCustomChallengeTypeSchema),
     async (c) => {
       const user = c.get("user");
-      const { category_id, name, unit, suggested_min, suggested_max } = c.req.valid("json");
+      const { category_id, name, unit, suggested_min, suggested_max } =
+          c.req.valid("json");
 
       const { success, meta } = await c.env.DB.prepare(
           `INSERT INTO challenge_types (category_id, name, unit, suggested_min, suggested_max, is_custom, created_by_user_id)
-       VALUES (?, ?, ?, ?, ?, true, ?)`
+           VALUES (?, ?, ?, ?, ?, true, ?)`,
       )
-          .bind(category_id, name, unit, suggested_min || null, suggested_max || null, user!.id)
+          .bind(
+              category_id,
+              name,
+              unit,
+              suggested_min || null,
+              suggested_max || null,
+              user!.id,
+          )
           .run();
 
       if (success) {
-        const newRow = await c.env.DB.prepare(`SELECT * FROM challenge_types WHERE id = ?`)
+        const newRow = await c.env.DB.prepare(
+            `SELECT * FROM challenge_types WHERE id = ?`,
+        )
             .bind(meta.last_row_id)
             .first();
         return c.json(newRow, 201);
       }
       return c.json({ error: "Failed to create custom challenge type" }, 500);
-    }
+    },
 );
 
 // Campaigns (summary for cards)
@@ -377,9 +425,9 @@ app.get("/wapi/campaigns", async (c) => {
              COUNT(DISTINCT p.id) as participant_count,
              COALESCE(SUM(pl.amount_per_unit * p.current_progress), 0) as total_raised
       FROM campaigns c
-      LEFT JOIN participants p ON c.id = p.campaign_id AND p.is_active = 1
-      LEFT JOIN donors d ON p.id = d.participant_id
-      LEFT JOIN pledges pl ON d.id = pl.donor_id
+             LEFT JOIN participants p ON c.id = p.campaign_id AND p.is_active = 1
+             LEFT JOIN donors d ON p.id = d.participant_id
+             LEFT JOIN pledges pl ON d.id = pl.donor_id
       WHERE c.status = 'active'
       GROUP BY c.id
       ORDER BY c.created_at DESC
@@ -411,18 +459,18 @@ app.get("/wapi/browse-campaigns", async (c) => {
              p.created_at,
              COUNT(DISTINCT d.id) as donor_count,
              COALESCE(SUM(
-               CASE 
-                 WHEN pl.pledge_type = 'flat_rate' THEN COALESCE(pl.flat_amount, 0)
-                 WHEN pl.pledge_type = 'per_unit_capped' THEN 
-                   MIN(COALESCE(pl.amount_per_unit,0) * COALESCE(p.current_progress,0), COALESCE(pl.max_total_amount,0))
-                 ELSE COALESCE(pl.amount_per_unit,0) * COALESCE(p.current_progress,0)
-               END
-             ), 0) as total_raised
+                          CASE
+                            WHEN pl.pledge_type = 'flat_rate' THEN COALESCE(pl.flat_amount, 0)
+                            WHEN pl.pledge_type = 'per_unit_capped' THEN
+                              MIN(COALESCE(pl.amount_per_unit,0) * COALESCE(p.current_progress,0), COALESCE(pl.max_total_amount,0))
+                            ELSE COALESCE(pl.amount_per_unit,0) * COALESCE(p.current_progress,0)
+                            END
+                      ), 0) as total_raised
       FROM participants p
-      JOIN campaigns c ON p.campaign_id = c.id
-      JOIN challenge_types ct ON p.challenge_type_id = ct.id
-      LEFT JOIN donors d ON p.id = d.participant_id
-      LEFT JOIN pledges pl ON d.id = pl.donor_id
+             JOIN campaigns c ON p.campaign_id = c.id
+             JOIN challenge_types ct ON p.challenge_type_id = ct.id
+             LEFT JOIN donors d ON p.id = d.participant_id
+             LEFT JOIN pledges pl ON d.id = pl.donor_id
       WHERE p.is_active = 1 AND c.status = 'active'
       GROUP BY p.id, c.id, ct.id
       ORDER BY p.created_at DESC
@@ -437,7 +485,6 @@ app.get("/wapi/browse-campaigns", async (c) => {
   }
 });
 
-// Spotlight (fixed and simplified)
 // Spotlight (feature one participant with an optional banner image)
 app.get("/wapi/spotlight", async (c) => {
   try {
@@ -459,7 +506,6 @@ app.get("/wapi/spotlight", async (c) => {
         ch.goal_amount,
         ch.updated_at,
         c.title AS campaign_title,
-        -- Try to grab the most recent photo the participant uploaded
         (
           SELECT pi.id FROM participant_images pi
           WHERE pi.participant_id = ch.id
@@ -472,14 +518,10 @@ app.get("/wapi/spotlight", async (c) => {
     `).first();
 
     if (!spotlight) {
-      // nice empty response for UI
       return c.json({ empty: true });
     }
 
-    // If we have an image id, expose a URL the UI can hit
-    const image_url = spotlight.image_id
-        ? `/wapi/images/${spotlight.image_id}`
-        : null;
+    const image_url = spotlight.image_id ? `/wapi/images/${spotlight.image_id}` : null;
 
     const progress = Number(spotlight.current_progress || 0);
     const goal = Number(spotlight.goal_amount || 0);
@@ -503,9 +545,101 @@ app.get("/wapi/spotlight", async (c) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+/** Activity feed (KV-backed) */
+// ─────────────────────────────────────────────────────────────────────────────
+
+type ActivityType = "donation" | "milestone" | "pledge" | "progress";
+type Activity = {
+  id: string;
+  type: ActivityType;
+  message: string;
+  amount?: number;
+  userName?: string;
+  participantId?: string; // keep as string for client filter
+  campaignId?: string;
+  createdAt: string; // ISO
+};
+
+const activityKey = (ts: string, id: string) => `activity:${ts}:${id}`;
+
+async function putActivity(
+    env: Env,
+    a: Omit<Activity, "id" | "createdAt"> &
+        Partial<Pick<Activity, "id" | "createdAt">>,
+) {
+  if (!env.ACTIVITIES) return; // graceful no-op if KV not bound
+  const createdAt =
+      a.createdAt ?? new Date().toISOString();
+  const id =
+      a.id ??
+      (globalThis.crypto?.randomUUID?.() ??
+          `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const rec: Activity = { ...a, id, createdAt } as Activity;
+  await env.ACTIVITIES.put(activityKey(createdAt, id), JSON.stringify(rec), {
+    expirationTtl: 60 * 60 * 24 * 7, // 7 days
+  });
+}
+
+// Public: write activity (can be secured later)
+app.post("/wapi/activity", async (c) => {
+  try {
+    const body = (await c.req.json()) as Partial<Activity>;
+    if (!body?.type || !body?.message)
+      return c.json({ error: "type and message required" }, 400);
+
+    await putActivity(c.env, {
+      type: body.type as ActivityType,
+      message: body.message,
+      amount: body.amount,
+      userName: body.userName,
+      participantId: body.participantId,
+      campaignId: body.campaignId,
+      id: body.id,
+      createdAt: body.createdAt,
+    });
+
+    c.header("Cache-Control", "no-store");
+    return c.json({ ok: true });
+  } catch (e) {
+    console.error("activity post error", e);
+    return c.json({ error: "Failed to write activity" }, 500);
+  }
+});
+
+// Public: read activities (near real-time polling)
+app.get("/wapi/activities", async (c) => {
+  try {
+    const limit = Number(c.req.query("limit") ?? "50");
+    const since = c.req.query("since"); // ISO string
+    const list =
+        (await c.env.ACTIVITIES?.list({ prefix: "activity:" })) ??
+        { keys: [] as { name: string }[] };
+
+    // Sort by key desc (ISO timestamp in key)
+    const keys = list.keys
+        .sort((a, b) => (a.name > b.name ? -1 : 1))
+        .slice(0, 500);
+
+    const items: Activity[] = [];
+    for (const k of keys) {
+      if (items.length >= limit) break;
+      const raw = await c.env.ACTIVITIES!.get(k.name);
+      if (!raw) continue;
+      const rec = JSON.parse(raw) as Activity;
+      if (since && rec.createdAt <= since) continue;
+      items.push(rec);
+    }
+    c.header("Cache-Control", "no-store");
+    return c.json({ ok: true, items });
+  } catch (e) {
+    console.error("activities list error", e);
+    return c.json({ ok: true, items: [] });
+  }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
-// User-owned resources used by UI
+/** User-owned resources used by UI */
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.get("/wapi/my-participants", authMiddleware, async (c) => {
@@ -539,31 +673,39 @@ const UpdateNotificationPreferencesSchema = z.object({
   email_donor_updates: z.boolean().optional(),
 });
 
-app.get("/wapi/user-notification-preferences", authMiddleware, async (c) => {
-  const user = c.get("user");
-  let preferences = await c.env.DB.prepare(
-      `SELECT * FROM user_notification_preferences WHERE user_id = ?`
-  )
-      .bind(user!.id)
-      .first();
-
-  if (!preferences) {
-    const { success, meta } = await c.env.DB.prepare(
-        `INSERT INTO user_notification_preferences (user_id, email_challenge_reminders, email_donor_updates)
-       VALUES (?, false, false)`
-    )
-        .bind(user!.id)
-        .run();
-
-    if (success) {
-      preferences = await c.env.DB.prepare(`SELECT * FROM user_notification_preferences WHERE id = ?`)
-          .bind(meta.last_row_id)
+app.get(
+    "/wapi/user-notification-preferences",
+    authMiddleware,
+    async (c) => {
+      const user = c.get("user");
+      let preferences = await c.env.DB.prepare(
+          `SELECT * FROM user_notification_preferences WHERE user_id = ?`,
+      )
+          .bind(user!.id)
           .first();
-    }
-  }
 
-  return c.json(preferences || { email_challenge_reminders: false, email_donor_updates: false });
-});
+      if (!preferences) {
+        const { success, meta } = await c.env.DB.prepare(
+            `INSERT INTO user_notification_preferences (user_id, email_challenge_reminders, email_donor_updates)
+       VALUES (?, false, false)`,
+        )
+            .bind(user!.id)
+            .run();
+
+        if (success) {
+          preferences = await c.env.DB.prepare(
+              `SELECT * FROM user_notification_preferences WHERE id = ?`,
+          )
+              .bind(meta.last_row_id)
+              .first();
+        }
+      }
+
+      return c.json(
+          preferences || { email_challenge_reminders: false, email_donor_updates: false },
+      );
+    },
+);
 
 app.put(
     "/wapi/user-notification-preferences",
@@ -575,7 +717,7 @@ app.put(
 
       await c.env.DB.prepare(
           `INSERT OR IGNORE INTO user_notification_preferences (user_id, email_challenge_reminders, email_donor_updates)
-       VALUES (?, false, false)`
+       VALUES (?, false, false)`,
       )
           .bind(user!.id)
           .run();
@@ -588,21 +730,21 @@ app.put(
       const { success } = await c.env.DB.prepare(
           `UPDATE user_notification_preferences
        SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-       WHERE user_id = ?`
+       WHERE user_id = ?`,
       )
           .bind(...values, user!.id)
           .run();
 
       if (success) return c.json({ success: true });
       return c.json({ error: "Failed to update preferences" }, 500);
-    }
+    },
 );
 
 app.get("/wapi/reminder-check", authMiddleware, async (c) => {
   const user = c.get("user");
   try {
     const preferences = await c.env.DB.prepare(
-        `SELECT last_banner_dismissed FROM user_notification_preferences WHERE user_id = ?`
+        `SELECT last_banner_dismissed FROM user_notification_preferences WHERE user_id = ?`,
     )
         .bind(user!.id)
         .first();
@@ -657,7 +799,7 @@ app.post("/wapi/dismiss-banner", authMiddleware, async (c) => {
          COALESCE((SELECT email_donor_updates FROM user_notification_preferences WHERE user_id = ?), false),
          CURRENT_TIMESTAMP,
          CURRENT_TIMESTAMP
-       )`
+       )`,
     )
         .bind(user!.id, user!.id, user!.id)
         .run();
@@ -665,109 +807,164 @@ app.post("/wapi/dismiss-banner", authMiddleware, async (c) => {
     if (success) return c.json({ success: true });
     return c.json({ error: "Failed to dismiss banner" }, 500);
   } catch (e) {
-    console.error("Dismiss banner error:", e);
+    console.error("Dismiss banner error", e);
     return c.json({ error: "Failed to dismiss banner" }, 500);
   }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Minimal create/log endpoints used by UI
+/** Minimal create/log endpoints used by UI */
 // ─────────────────────────────────────────────────────────────────────────────
 
-app.post("/wapi/participants", authMiddleware, zValidator("json", CreateParticipantSchema), async (c) => {
-  const user = c.get("user");
-  const { campaign_id, challenge_type_id, goal_amount, custom_unit, custom_challenge_name, bio, participant_name } =
-      c.req.valid("json");
+app.post(
+    "/wapi/participants",
+    authMiddleware,
+    zValidator("json", CreateParticipantSchema),
+    async (c) => {
+      const user = c.get("user");
+      const {
+        campaign_id,
+        challenge_type_id,
+        goal_amount,
+        custom_unit,
+        custom_challenge_name,
+        bio,
+        participant_name,
+      } = c.req.valid("json");
 
-  if (!participant_name?.trim()) return c.json({ error: "Participant name is required" }, 400);
+      if (!participant_name?.trim())
+        return c.json({ error: "Participant name is required" }, 400);
 
-  const { success, meta } = await c.env.DB.prepare(
-      `INSERT INTO participants (campaign_id, user_id, challenge_type_id, goal_amount, custom_unit, custom_challenge_name, bio, participant_name)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  )
-      .bind(
-          campaign_id,
-          user!.id,
-          challenge_type_id,
-          goal_amount,
-          custom_unit || null,
-          custom_challenge_name || null,
-          bio || null,
-          participant_name.trim()
+      const { success, meta } = await c.env.DB.prepare(
+          `INSERT INTO participants (campaign_id, user_id, challenge_type_id, goal_amount, custom_unit, custom_challenge_name, bio, participant_name)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run();
+          .bind(
+              campaign_id,
+              user!.id,
+              challenge_type_id,
+              goal_amount,
+              custom_unit || null,
+              custom_challenge_name || null,
+              bio || null,
+              participant_name.trim(),
+          )
+          .run();
 
-  if (success) return c.json({ id: meta.last_row_id, success: true }, 201);
-  return c.json({ error: "Failed to create participant" }, 500);
-});
+      if (success) return c.json({ id: meta.last_row_id, success: true }, 201);
+      return c.json({ error: "Failed to create participant" }, 500);
+    },
+);
 
-app.post("/wapi/progress", authMiddleware, zValidator("json", LogProgressSchema), async (c) => {
-  const user = c.get("user");
-  const { participant_id, units_completed, log_date, notes, image_url } = c.req.valid("json");
+app.post(
+    "/wapi/progress",
+    authMiddleware,
+    zValidator("json", LogProgressSchema),
+    async (c) => {
+      const user = c.get("user");
+      const { participant_id, units_completed, log_date, notes, image_url } =
+          c.req.valid("json");
 
-  const participant = await c.env.DB.prepare(`SELECT * FROM participants WHERE id = ? AND user_id = ?`)
-      .bind(participant_id, user!.id)
-      .first();
-  if (!participant) return c.json({ error: "Participant not found or unauthorized" }, 404);
+      const participant = await c.env.DB.prepare(
+          `SELECT * FROM participants WHERE id = ? AND user_id = ?`,
+      )
+          .bind(participant_id, user!.id)
+          .first();
+      if (!participant)
+        return c.json({ error: "Participant not found or unauthorized" }, 404);
 
-  try {
-    const { success, meta } = await c.env.DB.prepare(
-        `INSERT INTO progress_logs (participant_id, units_completed, log_date, notes)
-       VALUES (?, ?, ?, ?)`
-    )
-        .bind(participant_id, units_completed, log_date, notes || null)
-        .run();
+      try {
+        const { success, meta } = await c.env.DB.prepare(
+            `INSERT INTO progress_logs (participant_id, units_completed, log_date, notes)
+       VALUES (?, ?, ?, ?)`,
+        )
+            .bind(participant_id, units_completed, log_date, notes || null)
+            .run();
 
-    if (!success) return c.json({ error: "Failed to log progress" }, 500);
+        if (!success) return c.json({ error: "Failed to log progress" }, 500);
 
-    // Lightweight post
-    const content = notes?.trim() || `Completed ${units_completed} units on ${log_date}`;
-    await c.env.DB.prepare(
-        `INSERT INTO participant_posts (participant_id, content, image_url, post_type)
-       VALUES (?, ?, ?, 'progress_update')`
-    )
-        .bind(participant_id, content, image_url || null)
-        .run();
+        // Lightweight post
+        const content =
+            notes?.trim() || `Completed ${units_completed} units on ${log_date}`;
+        await c.env.DB.prepare(
+            `INSERT INTO participant_posts (participant_id, content, image_url, post_type)
+       VALUES (?, ?, ?, 'progress_update')`,
+        )
+            .bind(participant_id, content, image_url || null)
+            .run();
 
-    // Update aggregate
-    const total = await c.env.DB.prepare(`SELECT SUM(units_completed) as total FROM progress_logs WHERE participant_id = ?`)
-        .bind(participant_id)
-        .first();
-    await c.env.DB.prepare(
-        `UPDATE participants SET current_progress = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-    )
-        .bind(total?.total || 0, participant_id)
-        .run();
+        // Update aggregate
+        const total = await c.env.DB.prepare(
+            `SELECT SUM(units_completed) as total FROM progress_logs WHERE participant_id = ?`,
+        )
+            .bind(participant_id)
+            .first();
+        await c.env.DB.prepare(
+            `UPDATE participants SET current_progress = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        )
+            .bind(total?.total || 0, participant_id)
+            .run();
 
-    return c.json({ success: true, progress_log_id: meta.last_row_id, new_total_progress: total?.total || 0 }, 201);
-  } catch (e) {
-    console.error("Progress log error:", e);
-    return c.json({ error: "Failed to log progress due to database error" }, 500);
-  }
-});
+        // Announce to activity feed (non-blocking best-effort)
+        try {
+          await putActivity(c.env, {
+            type: "progress",
+            message: `Completed ${units_completed} ${participant.custom_unit ?? "units"} on ${log_date}`,
+            participantId: String(participant_id),
+          });
+        } catch (e) {
+          console.warn("putActivity(progress) failed", e);
+        }
 
-app.post("/wapi/posts", authMiddleware, zValidator("json", CreatePostSchema), async (c) => {
-  const user = c.get("user");
-  const { participant_id, content, image_url, post_type } = c.req.valid("json");
+        return c.json(
+            {
+              success: true,
+              progress_log_id: meta.last_row_id,
+              new_total_progress: total?.total || 0,
+            },
+            201,
+        );
+      } catch (e) {
+        console.error("Progress log error:", e);
+        return c.json(
+            { error: "Failed to log progress due to database error" },
+            500,
+        );
+      }
+    },
+);
 
-  const participant = await c.env.DB.prepare(`SELECT * FROM participants WHERE id = ? AND user_id = ?`)
-      .bind(participant_id, user!.id)
-      .first();
-  if (!participant) return c.json({ error: "Participant not found or unauthorized" }, 404);
+app.post(
+    "/wapi/posts",
+    authMiddleware,
+    zValidator("json", CreatePostSchema),
+    async (c) => {
+      const user = c.get("user");
+      const { participant_id, content, image_url, post_type } =
+          c.req.valid("json");
 
-  const { success } = await c.env.DB.prepare(
-      `INSERT INTO participant_posts (participant_id, content, image_url, post_type)
-     VALUES (?, ?, ?, ?)`
-  )
-      .bind(participant_id, content, image_url || null, post_type || "update")
-      .run();
+      const participant = await c.env.DB.prepare(
+          `SELECT * FROM participants WHERE id = ? AND user_id = ?`,
+      )
+          .bind(participant_id, user!.id)
+          .first();
+      if (!participant)
+        return c.json({ error: "Participant not found or unauthorized" }, 404);
 
-  if (success) return c.json({ success: true }, 201);
-  return c.json({ error: "Failed to create post" }, 500);
-});
+      const { success } = await c.env.DB.prepare(
+          `INSERT INTO participant_posts (participant_id, content, image_url, post_type)
+     VALUES (?, ?, ?, ?)`,
+      )
+          .bind(participant_id, content, image_url || null, post_type || "update")
+          .run();
+
+      if (success) return c.json({ success: true }, 201);
+      return c.json({ error: "Failed to create post" }, 500);
+    },
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Tiny debug/ping
+/** Tiny debug/ping */
 // ─────────────────────────────────────────────────────────────────────────────
 app.get("/wapi/ping", (c) => {
   const enabled = isDevAuth(c.env);
@@ -778,7 +975,7 @@ app.get("/wapi/ping", (c) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SPA fallback (keep as last)
+/** SPA fallback (keep as last) */
 // ─────────────────────────────────────────────────────────────────────────────
 app.get("*", async (c) => {
   const url = new URL(c.req.url);
@@ -809,5 +1006,6 @@ app.get("*", async (c) => {
 });
 
 export default {
-  fetch: (req: Request, env: Env, ctx: ExecutionContext) => app.fetch(req, env, ctx),
+  fetch: (req: Request, env: Env, ctx: ExecutionContext) =>
+      app.fetch(req, env, ctx),
 };

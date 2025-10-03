@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unused-modules */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 // Build an absolute URL for the default banner so it works on any route/base
@@ -25,7 +24,6 @@ type SpotlightData = {
     challenge_name?: string; // optional
 };
 
-// eslint-disable-next-line import/no-unused-modules
 export default function SpotlightCard({ data }: { data: SpotlightData }) {
     const DEFAULT_BANNER_URL = getDefaultBannerUrl();
 

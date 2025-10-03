@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate, useSearchParams } from 'react-router';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@getmocha/users-service/react';
 import { 
   ArrowLeft, 
@@ -15,6 +15,7 @@ import {
 import { createChallengeEndReminder, downloadICS } from '@/react-app/utils/calendarUtils';
 import ImageUpload from '@/react-app/components/ImageUpload';
 import ShareCampaign from '@/react-app/components/ShareCampaign';
+import RecentActivityFeed from '@/react-app/components/RecentActivityFeed';
 
 interface ProgressEntry {
   id: number;
@@ -39,13 +40,15 @@ function ProgressDetails({ participantId, refreshTrigger }: { participantId: num
         }
       });
       if (response.ok) {
-        const data = await response.json();
-        setProgressEntries(data);
+        const data: ProgressEntry[] = await response.json();
+        setProgressEntries(Array.isArray(data) ? data : []);
+        setError(null);
       } else {
         setError('Failed to load progress details');
       }
     } catch (err) {
       setError('Error loading progress details');
+      console.log(err)
     } finally {
       setLoading(false);
     }
@@ -88,7 +91,9 @@ function ProgressDetails({ participantId, refreshTrigger }: { participantId: num
             Logged on {new Date(entry.created_at).toLocaleDateString()}
           </div>
         </div>
-      ))}
+      ))}<aside className="lg:col-span-1 space-y-6">
+      <RecentActivityFeed participantId={String(participantId)} />
+    </aside>
     </div>
   );
 }
@@ -289,7 +294,7 @@ export default function Participant() {
         }
       }
     }
-  }, [id, fetchParticipant, searchParams, setSearchParams, user]);
+  }, [id, fetchParticipant, searchParams, setSearchParams, user,participant]);
 
   const handlePledgeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -748,13 +753,17 @@ export default function Participant() {
                   <p className="text-lg font-bold text-bfrs-electric mb-2">
                     {participant.participant_name || "Unknown"}'s Challenge
                   </p>
-                  {(participant.challenge_name !== participant.original_challenge_name || participant.unit !== participant.original_unit) && (
-                    <p className="text-gray-500 text-sm mt-1">
-                      Based on: {participant.original_challenge_name}
-                      {participant.suggested_min && participant.suggested_max && (
-                        <span> (suggested: {participant.suggested_min}-{participant.suggested_max} {participant.original_unit})</span>
-                      )}
-                    </p>
+                  {(participant.challenge_name !== participant.original_challenge_name ||
+                      participant.unit !== participant.original_unit) && (
+                      <p className="text-gray-500 text-sm mt-1">
+                        Based on: {participant.original_challenge_name}
+                        {participant.suggested_min != null && participant.suggested_max != null && (
+                            <span>
+        {" "}
+                              (suggested: {participant.suggested_min}-{participant.suggested_max} {participant.original_unit})
+      </span>
+                        )}
+                      </p>
                   )}
                 </div>
                 <div className="text-right">

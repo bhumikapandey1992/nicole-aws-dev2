@@ -1,33 +1,39 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "019870bf-4695-74f8-b344-315629bf7f9f",
-  "main": "./src/worker/index.ts",
-  "compatibility_date": "2025-06-17",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true,
-  },
-  "upload_source_maps": true,
-  
-  // Dev auth override for local/staging
-  "vars": {
-    "DEV_AUTH": "true",
-    "DEV_USER_EMAIL": "dev@example.com",
-    "DEV_USER_NAME": "Dev User",
-    "DEV_USER_ID": "1"
-  },
-
-  "triggers": {
-    "crons": [
-      "0 9 * * MON"
-    ]
-  },
-  
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "bfrs-staging",
-      "database_id": "8b30ad54-35d9-45e3-96e6-003e7772f0b5",
-    },
-  ],
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "019870bf-4695-74f8-b344-315629bf7f9f",
+	"main": "./src/worker/index.ts",
+	"compatibility_date": "2025-06-17",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true,
+	// Dev auth override for local/staging
+	"vars": {
+		"DEV_AUTH": "true",
+		"DEV_USER_EMAIL": "dev@example.com",
+		"DEV_USER_NAME": "Dev User",
+		"DEV_USER_ID": "1"
+	},
+	"triggers": {
+		"crons": [
+			"0 9 * * MON"
+		]
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "bfrs-staging",
+			"database_id": "8b30ad54-35d9-45e3-96e6-003e7772f0b5"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "ACTIVITIES",
+			"id": "7c3b181062554d1f9c3dec058285bece",
+			"preview_id": "1d40e352b0ee4fb597196d8481ed4338"
+		}
+	]
 }
