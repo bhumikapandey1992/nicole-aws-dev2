@@ -1,9 +1,40 @@
+/* filepath: /Users/bhumikapandey/IdeaProjects/maculeye-main/nicole-aws-dev/src/react-app/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Base font */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Global layout hygiene */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* prevent stray horizontal scroll */
+}
+
+/* Full-bleed helper: span the entire viewport width without funky positioning */
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+/* Modal/touch scrolling niceties */
+.modal-container,
+.modal-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sticky header helper (works on iOS too) */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 /* iOS Safari specific fixes */
@@ -17,41 +48,25 @@
   select {
     font-size: 16px !important;
   }
-  
-  /* Fix iOS scrolling in modals */
+
+  /* Smooth scrolling in modals on iOS */
+  .modal-container,
   .modal-scroll {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
   }
-  
-  /* Prevent horizontal scroll */
+
+  /* Also keep horizontal overflow hidden on iOS */
   body {
-    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
-  
-  /* Fix sticky positioning on iOS */
-  .sticky-header {
-    position: -webkit-sticky;
-    position: sticky;
-    z-index: 50;
-  }
 }
 
-/* Ensure proper touch scrolling */
-.modal-container {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
-/* Better button touch targets for mobile */
+/* Better button touch targets & mobile readability */
 @media (max-width: 640px) {
   button {
     min-height: 44px;
     touch-action: manipulation;
   }
-  
-  /* Ensure text is readable on mobile */
   body {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

@@ -637,6 +637,85 @@ app.get("/wapi/activities", async (c) => {
     return c.json({ ok: true, items: [] });
   }
 });
+// --- Activity stats (pulse) --------------------------------------------------
+// GET /wapi/activity-stats?window=24h   (supports: 1h | 24h | 7d ; default 24h)
+app.get("/wapi/activity-stats", async (c) => {
+  try {
+    const win = (c.req.query("window") || "24h").toLowerCase();
+    const ms =
+        win === "1h" ? 1 * 60 * 60 * 1000 :
+            win === "7d" ? 7 * 24 * 60 * 60 * 1000 :
+                24 * 60 * 60 * 1000; // default 24h
+
+    const since = new Date(Date.now() - ms).toISOString();
+
+    const list =
+        (await c.env.ACTIVITIES?.list({ prefix: "activity:" })) ??
+        { keys: [] as { name: string }[] };
+
+    let pledges = 0;
+    let donations = 0;
+    let progressUnits = 0; // parsed from message if available
+    let raisedCents = 0;
+
+    // simple sparkline: 12 buckets of event counts
+    const buckets = 12;
+    const bucketMs = ms / buckets;
+    const spark = Array.from({ length: buckets }, () => 0);
+
+    for (const k of list.keys) {
+      const raw = await c.env.ACTIVITIES!.get(k.name);
+      if (!raw) continue;
+
+      const rec = JSON.parse(raw) as {
+        type: "donation" | "milestone" | "pledge" | "progress";
+        amount?: number;
+        message?: string;
+        createdAt: string;
+      };
+
+      if (!rec.createdAt || rec.createdAt < since) continue;
+
+      switch (rec.type) {
+        case "pledge":
+          pledges += 1;
+          break;
+        case "donation":
+          donations += 1;
+          if (typeof rec.amount === "number") {
+            raisedCents += Math.round(rec.amount * 100);
+          }
+          break;
+        case "progress": {
+          // Your progress activity message looks like:
+          // "Completed {units_completed} {unit} on {date}"
+          // We'll try to parse the first number for a units sum.
+          const m = rec.message?.match(/(\d+(?:\.\d+)?)/);
+          if (m) progressUnits += Number(m[1]) || 0;
+          break;
+        }
+      }
+
+      // bump sparkline bucket by time
+      const t = new Date(rec.createdAt).getTime();
+      const start = Date.now() - ms;
+      const idx = Math.max(0, Math.min(buckets - 1, Math.floor((t - start) / bucketMs)));
+      spark[idx] += 1;
+    }
+
+    return c.json({
+      window: win,
+      pledges,
+      donations,
+      progress_units: progressUnits,
+      raised: raisedCents / 100, // dollars
+      spark,                      // counts per bucket
+    });
+  } catch (e) {
+    console.error("activity-stats error", e);
+    return c.json({ window: "24h", pledges: 0, donations: 0, progress_units: 0, raised: 0, spark: [] }, 200);
+  }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 /** User-owned resources used by UI */

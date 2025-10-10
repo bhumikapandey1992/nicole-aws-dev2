@@ -75,7 +75,7 @@ export default function Browse() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-screen">
           <div className="flex justify-between items-center py-3 sm:py-4">
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
               <img
@@ -110,7 +110,7 @@ export default function Browse() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-screen py-8">
         {/* Friendly inline banner if backend says something is missing */}
         {emptyReason && (
   <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[60] bg-yellow-50 text-yellow-900 border border-yellow-300 rounded-lg shadow px-4 py-2">
@@ -129,7 +129,7 @@ export default function Browse() {
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-black mb-4">
             Support Amazing <span className="text-bfrs-electric">Metabolic Challenges</span>
           </h1>
-          <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-8 px-4">
+          <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-8">
             Browse active fundraising challenges and pledge support for people using metabolic interventions to fund psychiatric recovery access.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-8">

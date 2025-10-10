@@ -98,7 +98,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-screen">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
               <img 
@@ -126,8 +126,8 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="pt-8 sm:pt-16 pb-12 sm:pb-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
+        <div className="w-screen">
+          <div className="text-center">
             <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-black text-bfrs-electric rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6 shadow-sm">
               <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               Transform Challenges into Impact
@@ -139,8 +139,8 @@ export default function Home() {
               Into Funding for Recovery
             </h1>
             
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
-              Challenge yourself with metabolic activities, ask friends and family to pledge dollars <strong>per unit you complete</strong> (per minute, mile, rep, session, or day), 
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              Challenge yourself with metabolic activities, ask friends and family to pledge dollars <strong>per unit you complete</strong> (per minute, mile, rep, session, or day),
               and raise funds to help others access life-changing psychiatric recovery education and support.
             </p>
 
@@ -177,7 +177,7 @@ export default function Home() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-2xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               <div className="text-center">
                 <div className="text-3xl font-bold text-bfrs-electric mb-1">{stats.participants}</div>
                 <div className="text-sm text-gray-600">Active Participants</div>
@@ -201,12 +201,12 @@ export default function Home() {
 
       {/* How It Works */}
       <section className="py-20 bg-white border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-screen">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
               How It Works
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600">
               Simple, transparent fundraising through personal metabolic challenges
             </p>
           </div>
@@ -247,12 +247,12 @@ export default function Home() {
 
       {/* Popular Challenge Types */}
       <section className="py-20 bg-white border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-screen">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
               Popular Challenge Types
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600">
               Join others in these proven metabolic interventions that support mental wellness
             </p>
           </div>
@@ -341,8 +341,8 @@ export default function Home() {
 
       {/* Mission Section */}
       <section className="py-20 bg-white border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
+        <div className="w-screen">
+          <div className="text-center">
             <div className="inline-flex items-center px-4 py-2 bg-black text-bfrs-electric rounded-full text-sm font-medium mb-6">
               <TrendingUp className="w-4 h-4 mr-2" />
               Our Mission
@@ -373,7 +373,7 @@ export default function Home() {
 
       {/* Browse Campaigns CTA */}
       <section className="py-20 bg-bfrs-electric">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+        <div className="w-screen text-center">
           <h2 className="text-4xl font-bold text-black mb-6">
             🌟 Discover Amazing Challenges to Support!
           </h2>
@@ -398,7 +398,7 @@ export default function Home() {
 
       {/* Create Your Own CTA */}
       <section className="py-12 sm:py-20 bg-white border-t border-gray-200">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+        <div className="w-screen text-center">
           <h2 className="text-2xl sm:text-4xl font-bold text-black mb-4 sm:mb-6">
             🎯 Ready to Start Your Challenge?
           </h2>
@@ -419,7 +419,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-black text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-screen">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-3 mb-4">
               <img 
