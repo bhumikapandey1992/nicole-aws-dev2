@@ -281,6 +281,76 @@ app.post("/wapi/sessions", async (c) => {
     );
   }
 });
+// Single participant with posts + aggregates
+app.get("/wapi/participants/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  if (!Number.isFinite(id)) return c.json({ error: "Invalid id" }, 400);
+
+  try {
+    const participant = await c.env.DB.prepare(`
+      SELECT p.*,
+             COALESCE(p.custom_challenge_name, ct.name) AS challenge_name,
+             COALESCE(p.custom_unit, ct.unit) AS unit,
+             ct.name AS original_challenge_name,
+             ct.unit AS original_unit,
+             ct.suggested_min, ct.suggested_max,
+             c.title AS campaign_title,
+             (SELECT COUNT(DISTINCT d.id)
+                FROM donors d WHERE d.participant_id = p.id) AS donor_count,
+             COALESCE((
+               SELECT SUM(CASE
+                 WHEN pl.pledge_type = 'flat_rate' THEN COALESCE(pl.flat_amount,0)
+                 WHEN pl.pledge_type = 'per_unit_capped' THEN
+                   MIN(COALESCE(pl.amount_per_unit,0) * COALESCE(p.current_progress,0),
+                       COALESCE(pl.max_total_amount,0))
+                 ELSE COALESCE(pl.amount_per_unit,0) * COALESCE(p.current_progress,0)
+               END)
+               FROM donors d LEFT JOIN pledges pl ON d.id = pl.donor_id
+               WHERE d.participant_id = p.id
+             ),0) AS total_raised
+      FROM participants p
+      JOIN challenge_types ct ON p.challenge_type_id = ct.id
+      JOIN campaigns c ON p.campaign_id = c.id
+      WHERE p.id = ?
+      LIMIT 1
+    `).bind(id).first();
+
+    if (!participant) return c.json({ error: "Not found" }, 404);
+
+    const posts = await c.env.DB.prepare(`
+      SELECT * FROM participant_posts
+      WHERE participant_id = ?
+      ORDER BY created_at DESC, id DESC
+      LIMIT 50
+    `).bind(id).all();
+
+    return c.json({ ...participant, posts: posts.results ?? [] });
+  } catch (e) {
+    if (isSchemaMissing(e)) return c.json({ error: "db-not-initialized" }, 200);
+    return c.json({ error: "Failed to load participant" }, 500);
+  }
+});
+
+// Progress logs for a participant
+app.get("/wapi/progress/:participantId", async (c) => {
+  const pid = Number(c.req.param("participantId"));
+  if (!Number.isFinite(pid)) return c.json({ error: "Invalid id" }, 400);
+
+  try {
+    const { results } = await c.env.DB.prepare(`
+      SELECT id, units_completed, log_date, notes, created_at
+      FROM progress_logs
+      WHERE participant_id = ?
+      ORDER BY log_date DESC, id DESC
+      LIMIT 200
+    `).bind(pid).all();
+
+    return c.json(results ?? []);
+  } catch (e) {
+    if (isSchemaMissing(e)) return c.json([]); // friendly empty on new DB
+    return c.json({ error: "Failed to load progress" }, 500);
+  }
+});
 
 // Dev login page that immediately POSTs to /wapi/sessions and bounces to /dashboard
 app.get("/dev-login", (c) => {
@@ -637,7 +707,8 @@ app.get("/wapi/activities", async (c) => {
     return c.json({ ok: true, items: [] });
   }
 });
-// --- Activity stats (pulse) --------------------------------------------------
+
+// --- Activity stats (global) -------------------------------------------------
 // GET /wapi/activity-stats?window=24h   (supports: 1h | 24h | 7d ; default 24h)
 app.get("/wapi/activity-stats", async (c) => {
   try {
@@ -662,6 +733,7 @@ app.get("/wapi/activity-stats", async (c) => {
     const buckets = 12;
     const bucketMs = ms / buckets;
     const spark = Array.from({ length: buckets }, () => 0);
+    const start = Date.now() - ms;
 
     for (const k of list.keys) {
       const raw = await c.env.ACTIVITIES!.get(k.name);
@@ -687,9 +759,7 @@ app.get("/wapi/activity-stats", async (c) => {
           }
           break;
         case "progress": {
-          // Your progress activity message looks like:
-          // "Completed {units_completed} {unit} on {date}"
-          // We'll try to parse the first number for a units sum.
+          // Try to parse the first number for a units sum.
           const m = rec.message?.match(/(\d+(?:\.\d+)?)/);
           if (m) progressUnits += Number(m[1]) || 0;
           break;
@@ -698,7 +768,6 @@ app.get("/wapi/activity-stats", async (c) => {
 
       // bump sparkline bucket by time
       const t = new Date(rec.createdAt).getTime();
-      const start = Date.now() - ms;
       const idx = Math.max(0, Math.min(buckets - 1, Math.floor((t - start) / bucketMs)));
       spark[idx] += 1;
     }
@@ -717,6 +786,148 @@ app.get("/wapi/activity-stats", async (c) => {
   }
 });
 
+// --- Activity stats scoped to "my follows" ----------------------------------
+// GET /wapi/activity-stats/followed?window=24h
+app.get("/wapi/activity-stats/followed", authMiddleware, async (c) => {
+  try {
+    const user = c.get("user")!;
+    const win = (c.req.query("window") || "24h").toLowerCase();
+    const ms =
+        win === "1h" ? 1 * 60 * 60 * 1000 :
+            win === "7d" ? 7 * 24 * 60 * 60 * 1000 :
+                24 * 60 * 60 * 1000; // default 24h
+
+    const since = new Date(Date.now() - ms).toISOString();
+
+    // Get the user's followed participant IDs
+    const { results } = await c.env.DB.prepare(
+        `SELECT participant_id FROM follows WHERE user_id = ?`
+    ).bind(user.id).all();
+    const followedIds = new Set<string>(results.map((r: any) => String(r.participant_id)));
+
+    // If they follow no one, return zeros quickly
+    if (followedIds.size === 0) {
+      return c.json({ window: win, pledges: 0, donations: 0, progress_units: 0, raised: 0, spark: Array(12).fill(0) });
+    }
+
+    const list =
+        (await c.env.ACTIVITIES?.list({ prefix: "activity:" })) ??
+        { keys: [] as { name: string }[] };
+
+    let pledges = 0;
+    let donations = 0;
+    let progressUnits = 0; // parsed from message if available
+    let raisedCents = 0;
+
+    const buckets = 12;
+    const bucketMs = ms / buckets;
+    const spark = Array.from({ length: buckets }, () => 0);
+    const start = Date.now() - ms;
+
+    for (const k of list.keys) {
+      const raw = await c.env.ACTIVITIES!.get(k.name);
+      if (!raw) continue;
+
+      const rec = JSON.parse(raw) as {
+        type: "donation" | "milestone" | "pledge" | "progress";
+        amount?: number;
+        message?: string;
+        participantId?: string;
+        createdAt: string;
+      };
+
+      if (!rec.createdAt || rec.createdAt < since) continue;
+      if (!rec.participantId || !followedIds.has(String(rec.participantId))) continue;
+
+      switch (rec.type) {
+        case "pledge":
+          pledges += 1;
+          break;
+        case "donation":
+          donations += 1;
+          if (typeof rec.amount === "number") raisedCents += Math.round(rec.amount * 100);
+          break;
+        case "progress": {
+          const m = rec.message?.match(/(\d+(?:\.\d+)?)/);
+          if (m) progressUnits += Number(m[1]) || 0;
+          break;
+        }
+      }
+
+      const t = new Date(rec.createdAt).getTime();
+      const idx = Math.max(0, Math.min(buckets - 1, Math.floor((t - start) / bucketMs)));
+      spark[idx] += 1;
+    }
+
+    return c.json({
+      window: win,
+      pledges,
+      donations,
+      progress_units: progressUnits,
+      raised: raisedCents / 100,
+      spark,
+    });
+  } catch (e) {
+    console.error("activity-stats/followed error", e);
+    return c.json({ window: "24h", pledges: 0, donations: 0, progress_units: 0, raised: 0, spark: [] }, 200);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+/** Follows: status, follow, unfollow, list mine */
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Alias: GET /wapi/follows/:participantId -> same as /status/:participantId
+app.get("/wapi/follows/:participantId", authMiddleware, async (c) => {
+  const user = c.get("user")!;
+  const pid = Number(c.req.param("participantId"));
+  if (!pid) return c.json({ error: "invalid participant" }, 400);
+
+  const row = await c.env.DB.prepare(
+      `SELECT 1 FROM follows WHERE user_id = ? AND participant_id = ? LIMIT 1`
+  ).bind(user.id, pid).first();
+
+  return c.json({ following: !!row }, 200);
+});
+
+// Alias: POST /wapi/follows { participant_id } -> same as POST /:participantId
+app.post("/wapi/follows", authMiddleware, async (c) => {
+  const user = c.get("user")!;
+  const body = await c.req.json().catch(() => ({})) as { participant_id?: number };
+  const pid = Number(body?.participant_id);
+  if (!pid) return c.json({ error: "participant_id required" }, 400);
+
+  await c.env.DB.prepare(
+      `INSERT OR IGNORE INTO follows (user_id, participant_id) VALUES (?, ?)`
+  ).bind(user.id, pid).run();
+
+  return c.json({ ok: true, following: true }, 200);
+});
+
+
+// Unfollow (idempotent)
+app.delete("/wapi/follows/:participantId", authMiddleware, async (c) => {
+  const user = c.get("user")!;
+  const pid = Number(c.req.param("participantId"));
+  if (!pid) return c.json({ error: "invalid participant" }, 400);
+
+  await c.env.DB.prepare(
+      `DELETE FROM follows WHERE user_id = ? AND participant_id = ?`
+  ).bind(user.id, pid).run();
+
+  return c.json({ ok: true, following: false }, 200);
+});
+
+// List my followed participant IDs
+app.get("/wapi/follows", authMiddleware, async (c) => {
+  const user = c.get("user")!;
+  const { results } = await c.env.DB.prepare(
+      `SELECT participant_id FROM follows WHERE user_id = ?`
+  ).bind(user.id).all();
+
+  return c.json({ ids: results.map((r: any) => r.participant_id) }, 200);
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 /** User-owned resources used by UI */
 // ─────────────────────────────────────────────────────────────────────────────
@@ -725,13 +936,13 @@ app.get("/wapi/my-participants", authMiddleware, async (c) => {
   const user = c.get("user");
   try {
     const { results } = await c.env.DB.prepare(`
-      SELECT p.*, 
-             COALESCE(p.custom_challenge_name, ct.name) as challenge_name, 
-             COALESCE(p.custom_unit, ct.unit) as unit, 
+      SELECT p.*,
+             COALESCE(p.custom_challenge_name, ct.name) as challenge_name,
+             COALESCE(p.custom_unit, ct.unit) as unit,
              c.title as campaign_title
       FROM participants p
-      JOIN challenge_types ct ON p.challenge_type_id = ct.id
-      JOIN campaigns c ON p.campaign_id = c.id
+             JOIN challenge_types ct ON p.challenge_type_id = ct.id
+             JOIN campaigns c ON p.campaign_id = c.id
       WHERE p.user_id = ? AND p.is_active = 1
       ORDER BY p.created_at DESC
     `)
@@ -766,7 +977,7 @@ app.get(
       if (!preferences) {
         const { success, meta } = await c.env.DB.prepare(
             `INSERT INTO user_notification_preferences (user_id, email_challenge_reminders, email_donor_updates)
-       VALUES (?, false, false)`,
+             VALUES (?, false, false)`,
         )
             .bind(user!.id)
             .run();
@@ -808,8 +1019,8 @@ app.put(
 
       const { success } = await c.env.DB.prepare(
           `UPDATE user_notification_preferences
-       SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-       WHERE user_id = ?`,
+           SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+           WHERE user_id = ?`,
       )
           .bind(...values, user!.id)
           .run();
@@ -837,13 +1048,13 @@ app.get("/wapi/reminder-check", authMiddleware, async (c) => {
     const staleParticipant = await c.env.DB.prepare(`
       SELECT p.id, COALESCE(p.custom_challenge_name, ct.name) as challenge_name
       FROM participants p
-      JOIN challenge_types ct ON p.challenge_type_id = ct.id
-      LEFT JOIN progress_logs pl ON p.id = pl.participant_id
+             JOIN challenge_types ct ON p.challenge_type_id = ct.id
+             LEFT JOIN progress_logs pl ON p.id = pl.participant_id
       WHERE p.user_id = ? AND p.is_active = 1
       GROUP BY p.id
       HAVING MAX(pl.created_at) IS NULL OR MAX(pl.created_at) < datetime('now', '-7 days')
       ORDER BY p.created_at DESC
-      LIMIT 1
+        LIMIT 1
     `)
         .bind(user!.id)
         .first();
@@ -916,7 +1127,7 @@ app.post(
 
       const { success, meta } = await c.env.DB.prepare(
           `INSERT INTO participants (campaign_id, user_id, challenge_type_id, goal_amount, custom_unit, custom_challenge_name, bio, participant_name)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
           .bind(
               campaign_id,
@@ -955,7 +1166,7 @@ app.post(
       try {
         const { success, meta } = await c.env.DB.prepare(
             `INSERT INTO progress_logs (participant_id, units_completed, log_date, notes)
-       VALUES (?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?)`,
         )
             .bind(participant_id, units_completed, log_date, notes || null)
             .run();
@@ -967,7 +1178,7 @@ app.post(
             notes?.trim() || `Completed ${units_completed} units on ${log_date}`;
         await c.env.DB.prepare(
             `INSERT INTO participant_posts (participant_id, content, image_url, post_type)
-       VALUES (?, ?, ?, 'progress_update')`,
+             VALUES (?, ?, ?, 'progress_update')`,
         )
             .bind(participant_id, content, image_url || null)
             .run();
@@ -1032,7 +1243,7 @@ app.post(
 
       const { success } = await c.env.DB.prepare(
           `INSERT INTO participant_posts (participant_id, content, image_url, post_type)
-     VALUES (?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?)`,
       )
           .bind(participant_id, content, image_url || null, post_type || "update")
           .run();

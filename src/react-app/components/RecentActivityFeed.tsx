@@ -22,6 +22,13 @@ type Activity = {
     campaignId?: string;
 };
 
+type Props = {
+    /** If provided, only show activity for this participant */
+    participantId?: string;
+    /** How many to request per poll (defaults to 50) */
+    limit?: number;
+};
+
 const FILTERS = [
     { key: "all", label: "All" },
     { key: "donation", label: "Donations" },
@@ -84,7 +91,7 @@ function timeAgo(iso: string) {
     return `${d}d ago`;
 }
 
-export default function RecentActivityFeed() {
+export default function RecentActivityFeed({ participantId, limit = 50 }: Props) {
     const [items, setItems] = useState<Activity[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -97,7 +104,7 @@ export default function RecentActivityFeed() {
         async function load(initial = false) {
             try {
                 const params = new URLSearchParams();
-                params.set("limit", "50");
+                params.set("limit", String(limit));
                 if (sinceRef.current) params.set("since", sinceRef.current);
 
                 const res = await fetch(`/wapi/activities?${params.toString()}`, {
@@ -118,7 +125,7 @@ export default function RecentActivityFeed() {
                     if (newest) sinceRef.current = newest;
                 }
                 setError(null);
-            } catch (e) {
+            } catch {
                 if (!cancel) setError("Failed to load activities");
             } finally {
                 if (!cancel) setLoading(false);
@@ -135,12 +142,18 @@ export default function RecentActivityFeed() {
             clearInterval(t);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [limit]);
 
+    // First, optionally scope to a participant
+    const byParticipant = useMemo(() => {
+        return participantId ? items.filter((i) => i.participantId === participantId) : items;
+    }, [items, participantId]);
+
+    // Then apply the type filter chips
     const filtered = useMemo(() => {
-        if (filter === "all") return items;
-        return items.filter((i) => i.type === filter);
-    }, [items, filter]);
+        if (filter === "all") return byParticipant;
+        return byParticipant.filter((i) => i.type === filter);
+    }, [byParticipant, filter]);
 
     return (
         <section
@@ -166,7 +179,7 @@ export default function RecentActivityFeed() {
                   </span>
                   Live
                 </span>{" "}
-                                • {items.length} {items.length === 1 ? "update" : "updates"}
+                                • {filtered.length} {filtered.length === 1 ? "update" : "updates"}
                             </p>
                         </div>
                     </div>
@@ -266,6 +279,6 @@ export default function RecentActivityFeed() {
 /* Optional: hide horizontal scrollbar for filter row (Tailwind-friendly) */
 declare global {
     interface HTMLElementTagNameMap {
-        "style": HTMLStyleElement;
+        style: HTMLStyleElement;
     }
 }
