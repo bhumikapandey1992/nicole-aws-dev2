@@ -4,6 +4,14 @@
       "source": "/wapi/:path*",
       "destination": "https://019870bf-4695-74f8-b344-315629bf7f9f-staging.bfrs-dev.workers.dev/wapi/:path*"
     },
+    {
+      "source": "/dev-login",
+      "destination": "https://019870bf-4695-74f8-b344-315629bf7f9f-staging.bfrs-dev.workers.dev/dev-login"
+    },
+    {
+      "source": "/health",
+      "destination": "https://019870bf-4695-74f8-b344-315629bf7f9f-staging.bfrs-dev.workers.dev/health"
+    },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
