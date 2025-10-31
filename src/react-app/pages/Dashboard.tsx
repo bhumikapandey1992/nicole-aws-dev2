@@ -21,7 +21,7 @@ interface Campaign {
 }
 
 interface Spotlight {
-  id: number;
+  id: number | string;
   participant_name?: string;
   challenge_name?: string;
   unit?: string;
@@ -31,6 +31,8 @@ interface Spotlight {
   total_raised?: number;
   campaign_title?: string;
   spotlight_image_url?: string | null;
+  image_url?: string | null;
+  profile_image_url?: string | null;
   every_org_url?: string | null;
 }
 
@@ -70,6 +72,13 @@ function Sparkline({ data }: { data: number[] }) {
   );
 }
 
+// Narrow type guard for spotlight-like objects
+function isSpotlightLike(x: unknown): x is Spotlight {
+  if (!x || typeof x !== 'object') return false;
+  const id = (x as { id?: unknown }).id;
+  return typeof id === 'number' || typeof id === 'string';
+}
+
 export default function Dashboard() {
   const { user, logout, isPending } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -90,21 +99,20 @@ export default function Dashboard() {
       const campaignsData = await campaignsResponse.json();
       setCampaigns(Array.isArray(campaignsData) ? campaignsData : []);
 
-      // inside fetchData()
+      // Spotlight fetch (tolerate {spotlight: {...}} or direct object)
       try {
         const sRes = await fetch('/wapi/spotlight', { headers: { 'cache-control': 'no-cache' } });
         if (sRes.ok) {
-          const raw = await sRes.json();
-          // handle {spotlight: {...}} or direct object
-          const cand = (raw?.spotlight ?? raw) as any;
+          const raw: unknown = await sRes.json();
+          const maybeContainer = raw as { spotlight?: unknown };
+          const candidate: unknown = (maybeContainer && 'spotlight' in maybeContainer)
+              ? maybeContainer.spotlight
+              : raw;
 
-          // accept number ids or string ids (including "0")
-          const hasId = cand && (typeof cand.id === 'number' || (typeof cand.id === 'string' && cand.id.length > 0));
-
-          if (hasId) {
-            setSpotlight(cand);
+          if (isSpotlightLike(candidate)) {
+            setSpotlight(candidate);
           } else {
-            setSpotlight(null); // will render fallback card below
+            setSpotlight(null);
           }
         } else {
           setSpotlight(null);
@@ -137,8 +145,8 @@ export default function Dashboard() {
       }
     }
 
-    loadPulse();
-    const t = window.setInterval(loadPulse, 30_000);
+    void loadPulse();
+    const t = window.setInterval(() => { void loadPulse(); }, 30_000);
     return () => { clearInterval(t); };
   }, []);
 
@@ -196,7 +204,7 @@ export default function Dashboard() {
 
         {/* Main content layout */}
         <div className="mx-auto w-full max-w-none px-4 sm:px-6 lg:px-8 py-8">
-          {/* Spotlight + Right rail */}
+          {/* Spotlight + Right rail + Responsive */}
           <div className="grid grid-cols-12 items-stretch gap-y-6 xl:gap-y-8 gap-x-2 xl:gap-x-2">
             {/* Spotlight */}
             <div className="col-span-12 lg:col-span-8 xl:col-span-8">
@@ -206,8 +214,8 @@ export default function Dashboard() {
                   <img
                       src={
                           spotlight?.spotlight_image_url
-                          || (spotlight as any)?.image_url
-                          || (spotlight as any)?.profile_image_url
+                          || spotlight?.image_url
+                          || spotlight?.profile_image_url
                           || `${(import.meta.env.BASE_URL ?? '/').replace(/\/?$/, '/')}`
                           + `default-spotlight.png${import.meta.env.DEV ? `?t=${Date.now()}` : ''}`
                       }
@@ -297,7 +305,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-
             {/* Right rail */}
             <aside className="col-span-12 lg:col-span-4 xl:col-span-4 h-full">
               <div className="sticky top-[88px] space-y-6 h-full">
@@ -317,7 +324,6 @@ export default function Dashboard() {
                         <div className="h-8 rounded bg-gray-100 animate-pulse" />
                     ) : pulse?.spark?.length ? (
                         <div className="text-bfrs-electric">
-                          {/* give the line some breathing room so it doesn't kiss the edges */}
                           <div className="px-1">
                             <Sparkline data={pulse.spark} />
                           </div>
