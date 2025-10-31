@@ -1,13 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
+// Build an absolute URL for the default banner so it works on any route/base
 // Build an absolute URL for the default banner so it works on any route/base
 function getDefaultBannerUrl() {
-  const base = (import.meta.env.BASE_URL ?? "/");
-  const basePath = base.endsWith("/") ? base : base + "/";
-  if (typeof window !== "undefined") {
-    return new URL(basePath + "default-spotlight.png", window.location.origin).toString();
-  }
-  return basePath + "default-spotlight.png";
+    const base = import.meta.env.BASE_URL ?? "/";
+    const basePath = base.endsWith("/") ? base : base + "/";
+
+    // Cache-bust in dev; in prod use a static version if you want (e.g., VITE_ASSET_VER)
+    const ver =
+        import.meta.env.DEV
+            ? `?t=${Date.now()}`
+            : (import.meta.env.VITE_ASSET_VER ? `?v=${import.meta.env.VITE_ASSET_VER}` : "");
+
+    const path = `${basePath}default-spotlight.png${ver}`;
+
+    if (typeof window !== "undefined") {
+        return new URL(path, window.location.origin).toString();
+    }
+    return path;
 }
 
 type SpotlightData = {

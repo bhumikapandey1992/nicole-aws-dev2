@@ -90,15 +90,27 @@ export default function Dashboard() {
       const campaignsData = await campaignsResponse.json();
       setCampaigns(Array.isArray(campaignsData) ? campaignsData : []);
 
+      // inside fetchData()
       try {
         const sRes = await fetch('/wapi/spotlight', { headers: { 'cache-control': 'no-cache' } });
         if (sRes.ok) {
-          const sData = await sRes.json();
-          const s: Spotlight | null = sData?.spotlight ?? sData ?? null;
-          if (s && typeof s === 'object' && s.id) setSpotlight(s);
+          const raw = await sRes.json();
+          // handle {spotlight: {...}} or direct object
+          const cand = (raw?.spotlight ?? raw) as any;
+
+          // accept number ids or string ids (including "0")
+          const hasId = cand && (typeof cand.id === 'number' || (typeof cand.id === 'string' && cand.id.length > 0));
+
+          if (hasId) {
+            setSpotlight(cand);
+          } else {
+            setSpotlight(null); // will render fallback card below
+          }
+        } else {
+          setSpotlight(null);
         }
       } catch {
-        // no-op
+        setSpotlight(null);
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error || 'Failed to fetch data');
@@ -188,99 +200,103 @@ export default function Dashboard() {
           <div className="grid grid-cols-12 items-stretch gap-y-6 xl:gap-y-8 gap-x-2 xl:gap-x-2">
             {/* Spotlight */}
             <div className="col-span-12 lg:col-span-8 xl:col-span-8">
-              {spotlight && (
-                  <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm min-h-[360px] h-full">
-                    {/* Image */}
-                    {spotlight.spotlight_image_url ? (
-                        <div className="w-full h-52 md:h-64 overflow-hidden bg-gray-50">
-                          <img
-                              src={spotlight.spotlight_image_url}
-                              alt={spotlight.participant_name || 'Featured participant'}
-                              className="w-full h-full object-cover"
-                              loading="eager"
-                          />
-                        </div>
-                    ) : (
-                        <img
-                            src="/default-spotlight.png"
-                            alt="Spotlight banner"
-                            className="block w-full h-40 sm:h-48 object-cover"
-                        />
-                    )}
+              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm min-h-[360px] h-full">
+                {/* Banner (uses spotlight image → profile/image_url → default asset) */}
+                <div className="w-full h-40 sm:h-48 md:h-64 overflow-hidden bg-gray-50">
+                  <img
+                      src={
+                          spotlight?.spotlight_image_url
+                          || (spotlight as any)?.image_url
+                          || (spotlight as any)?.profile_image_url
+                          || `${(import.meta.env.BASE_URL ?? '/').replace(/\/?$/, '/')}`
+                          + `default-spotlight.png${import.meta.env.DEV ? `?t=${Date.now()}` : ''}`
+                      }
+                      alt={`${spotlight?.participant_name ?? 'Featured participant'} banner`}
+                      className="w-full h-full object-cover block"
+                      loading="eager"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src =
+                            `${(import.meta.env.BASE_URL ?? '/').replace(/\/?$/, '/')}`
+                            + `default-spotlight.png${import.meta.env.DEV ? `?t=${Date.now()}` : ''}`;
+                      }}
+                  />
+                </div>
 
-                    {/* Content */}
-                    <div className="p-6 md:p-8">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                          <div className="text-xs uppercase tracking-wider text-gray-500 mb-1">Participant Spotlight</div>
-                          <h2 className="text-2xl md:text-3xl font-extrabold text-black">
-                            {spotlight.participant_name || 'Featured Challenger'}
-                          </h2>
-                          <p className="text-gray-700 mt-2">
-                            {spotlight.challenge_name ? (
-                                <>
-                                  Challenging themselves with <strong>{spotlight.challenge_name}</strong>
-                                  {spotlight.unit ? <> • Goal: <strong>{spotlight.goal_amount ?? 0} {spotlight.unit}</strong></> : null}
-                                </>
-                            ) : (
-                                <>A featured campaign raising funds for psychiatric recovery access.</>
-                            )}
-                          </p>
-                        </div>
+                {/* Content */}
+                <div className="p-6 md:p-8">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <div className="text-xs uppercase tracking-wider text-gray-500 mb-1">Participant Spotlight</div>
+                      <h2 className="text-2xl md:text-3xl font-extrabold text-black">
+                        {spotlight?.participant_name || 'Featured Challenger'}
+                      </h2>
+                      <p className="text-gray-700 mt-2">
+                        {spotlight?.challenge_name ? (
+                            <>
+                              Challenging themselves with <strong>{spotlight.challenge_name}</strong>
+                              {spotlight?.unit ? (
+                                  <> • Goal: <strong>{spotlight?.goal_amount ?? 0} {spotlight.unit}</strong></>
+                              ) : null}
+                            </>
+                        ) : (
+                            <>A featured campaign raising funds for psychiatric recovery access.</>
+                        )}
+                      </p>
+                    </div>
 
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Link
-                              to={`/participant/${spotlight.id}`}
-                              className="inline-flex items-center justify-center px-5 py-3 bg-bfrs-electric text-black font-semibold rounded-lg hover:bg-bfrs-electric-dark transition-colors"
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Link
+                          to={spotlight ? `/participant/${spotlight.id}` : '/browse'}
+                          className="inline-flex items-center justify-center px-5 py-3 bg-bfrs-electric text-black font-semibold rounded-lg hover:bg-bfrs-electric-dark transition-colors"
+                      >
+                        View Campaign
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </Link>
+                      {spotlight?.every_org_url?.startsWith('http') && (
+                          <a
+                              href={spotlight.every_org_url as string}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center px-5 py-3 bg-black text-bfrs-electric font-semibold rounded-lg hover:bg-gray-900 transition-colors"
                           >
-                            View Campaign
+                            Donate
                             <ArrowRight className="w-5 h-5 ml-2" />
-                          </Link>
-                          {(spotlight.every_org_url || '').startsWith('http') && (
-                              <a
-                                  href={spotlight.every_org_url as string}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center justify-center px-5 py-3 bg-black text-bfrs-electric font-semibold rounded-lg hover:bg-gray-900 transition-colors"
-                              >
-                                Donate
-                                <ArrowRight className="w-5 h-5 ml-2" />
-                              </a>
-                          )}
-                        </div>
-                      </div>
+                          </a>
+                      )}
+                    </div>
+                  </div>
 
-                      {/* Stats */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                        <div className="rounded-xl border border-gray-200 p-4">
-                          <div className="text-xs text-gray-500">Raised</div>
-                          <div className="text-xl font-bold text-black">
-                            ${Number(spotlight.total_raised ?? 0).toFixed(2)}
-                          </div>
-                        </div>
-                        <div className="rounded-xl border border-gray-200 p-4">
-                          <div className="text-xs text-gray-500">Donors</div>
-                          <div className="text-xl font-bold text-black">
-                            {spotlight.donor_count ?? 0}
-                          </div>
-                        </div>
-                        <div className="rounded-xl border border-gray-200 p-4">
-                          <div className="text-xs text-gray-500">Progress</div>
-                          <div className="text-xl font-bold text-black">
-                            {spotlight.current_progress ?? 0}{spotlight.unit ? ` ${spotlight.unit}` : ''}
-                          </div>
-                        </div>
-                        <div className="rounded-xl border border-gray-200 p-4">
-                          <div className="text-xs text-gray-500">Goal</div>
-                          <div className="text-xl font-bold text-black">
-                            {spotlight.goal_amount ?? 0}{spotlight.unit ? ` ${spotlight.unit}` : ''}
-                          </div>
-                        </div>
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                    <div className="rounded-xl border border-gray-200 p-4">
+                      <div className="text-xs text-gray-500">Raised</div>
+                      <div className="text-xl font-bold text-black">
+                        ${Number(spotlight?.total_raised ?? 0).toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-gray-200 p-4">
+                      <div className="text-xs text-gray-500">Donors</div>
+                      <div className="text-xl font-bold text-black">
+                        {spotlight?.donor_count ?? 0}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-gray-200 p-4">
+                      <div className="text-xs text-gray-500">Progress</div>
+                      <div className="text-xl font-bold text-black">
+                        {spotlight?.current_progress ?? 0}{spotlight?.unit ? ` ${spotlight.unit}` : ''}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-gray-200 p-4">
+                      <div className="text-xs text-gray-500">Goal</div>
+                      <div className="text-xl font-bold text-black">
+                        {spotlight?.goal_amount ?? 0}{spotlight?.unit ? ` ${spotlight.unit}` : ''}
                       </div>
                     </div>
                   </div>
-              )}
+                </div>
+              </div>
             </div>
+
 
             {/* Right rail */}
             <aside className="col-span-12 lg:col-span-4 xl:col-span-4 h-full">
@@ -289,7 +305,7 @@ export default function Dashboard() {
                 <section className="rounded-2xl border border-gray-200 bg-white shadow-sm min-h-[420px] md:min-h-[440px] lg:min-h-[460px] h-full">
                   <header className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-900">Support Pulse</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">Metabolic Momentum</h3>
                       <p className="text-xs text-gray-500">Last 24 hours</p>
                     </div>
                     <div className="text-xs text-gray-500">{(pulse?.spark?.reduce((a,b)=>a+b,0) ?? 0)} events</div>
