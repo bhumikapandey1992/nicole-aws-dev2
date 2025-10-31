@@ -150,23 +150,23 @@ export default function Dashboard() {
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200">
           <div className="mx-auto w-full max-w-[1200px] xl:max-w-[1280px] px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-between items-center py-4">
-              <div className="flex items-center">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center min-w-0">
                 <img
                     src="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg"
                     alt="Brain Fog Recovery Source Logo"
-                    className="w-10 h-10 rounded-lg mr-3"
+                    className="w-10 h-10 rounded-lg mr-3 flex-shrink-0"
                 />
-                <h1 className="text-2xl font-bold text-black">
+                <h1 className="text-xl sm:text-2xl font-bold text-black truncate">
                   Brain Fog Recovery Source - Metabolic Challenges
                 </h1>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 min-w-0">
                   {user.google_user_data.picture && (
-                      <img src={user.google_user_data.picture} alt="Profile" className="w-8 h-8 rounded-full" />
+                      <img src={user.google_user_data.picture} alt="Profile" className="w-8 h-8 rounded-full flex-shrink-0" />
                   )}
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 truncate">
                   {user.google_user_data.name || user.email}
                 </span>
                 </div>
@@ -424,36 +424,38 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-12 gap-6 xl:gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
+          {/* Stats (fixed mobile layout) */}
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center min-w-0">
+                <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
                   <Users className="w-6 h-6 text-bfrs-electric" />
                 </div>
-                <div className="ml-4">
+                <div className="ml-4 min-w-0">
                   <h3 className="text-sm font-medium text-gray-500">Active Participants</h3>
                   <p className="text-2xl font-bold text-black">{totalActiveParticipants}</p>
                 </div>
               </div>
             </div>
+
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
+              <div className="flex items-center min-w-0">
+                <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
                   <DollarSign className="w-6 h-6 text-bfrs-electric" />
                 </div>
-                <div className="ml-4">
+                <div className="ml-4 min-w-0">
                   <h3 className="text-sm font-medium text-gray-500">Total Raised</h3>
                   <p className="text-2xl font-bold text-black">${totalRaised.toFixed(2)}</p>
                 </div>
               </div>
             </div>
+
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
+              <div className="flex items-center min-w-0">
+                <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
                   <Target className="w-6 h-6 text-bfrs-electric" />
                 </div>
-                <div className="ml-4">
+                <div className="ml-4 min-w-0">
                   <h3 className="text-sm font-medium text-gray-500">Challenge Categories</h3>
                   <p className="text-2xl font-bold text-black">6</p>
                 </div>

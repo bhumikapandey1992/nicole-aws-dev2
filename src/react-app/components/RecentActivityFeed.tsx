@@ -160,15 +160,27 @@ export default function RecentActivityFeed({ participantId, limit = 50 }: Props)
             className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-white"
             aria-labelledby="recent-activity-heading"
         >
+            {/* local CSS to hide scrollbars for the tab row on mobile */}
+            <style
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{
+                    __html: `
+            .no-scrollbar::-webkit-scrollbar { display: none; }
+            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+          `,
+                }}
+            />
+
             {/* Header */}
-            <div className="bg-gradient-to-r from-lime-50 to-emerald-50 border-b border-gray-200 px-5 py-4">
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-lime-400/90 text-black flex items-center justify-center shadow-sm">
+            <div className="bg-gradient-to-r from-lime-50 to-emerald-50 border-b border-gray-200 px-4 sm:px-5 py-4">
+                <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    {/* Title */}
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-8 rounded-full bg-lime-400/90 text-black flex items-center justify-center shadow-sm flex-shrink-0">
                             <BellRing className="h-4 w-4" />
                         </div>
-                        <div>
-                            <h2 id="recent-activity-heading" className="text-sm font-semibold text-gray-900">
+                        <div className="min-w-0">
+                            <h2 id="recent-activity-heading" className="text-sm font-semibold text-gray-900 truncate">
                                 Recent Activity
                             </h2>
                             <p className="text-xs text-gray-600">
@@ -184,25 +196,29 @@ export default function RecentActivityFeed({ participantId, limit = 50 }: Props)
                         </div>
                     </div>
 
-                    {/* Filter chips */}
-                    <div className="flex gap-1 overflow-x-auto hide-scrollbar">
-                        {FILTERS.map((f) => {
-                            const active = filter === f.key;
-                            return (
-                                <button
-                                    key={f.key}
-                                    onClick={() => setFilter(f.key)}
-                                    className={[
-                                        "whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition",
-                                        active
-                                            ? "bg-black text-lime-300 border-black shadow-sm"
-                                            : "bg-white text-gray-700 border-gray-200 hover:border-gray-300",
-                                    ].join(" ")}
-                                >
-                                    {f.label}
-                                </button>
-                            );
-                        })}
+                    {/* Filter chips (h-scroll on mobile, inline on desktop) */}
+                    <div className="-mx-1 sm:mx-0 overflow-x-auto no-scrollbar">
+                        <div className="flex gap-1 px-1 w-max" role="tablist" aria-label="Activity filters">
+                            {FILTERS.map((f) => {
+                                const active = filter === f.key;
+                                return (
+                                    <button
+                                        key={f.key}
+                                        onClick={() => setFilter(f.key)}
+                                        role="tab"
+                                        aria-selected={active}
+                                        className={[
+                                            "shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition",
+                                            active
+                                                ? "bg-black text-lime-300 border-black shadow-sm"
+                                                : "bg-white text-gray-700 border-gray-200 hover:border-gray-300",
+                                        ].join(" ")}
+                                    >
+                                        {f.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -248,8 +264,8 @@ export default function RecentActivityFeed({ participantId, limit = 50 }: Props)
                                         />
                                         {/* card row */}
                                         <div className="group rounded-xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition">
-                                            <div className="p-3">
-                                                <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                                            <div className="p-3 sm:p-4">
+                                                <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
                                                     <Icon className={`h-4 w-4 ${meta.iconColor}`} />
                                                     <span
                                                         className={[
@@ -262,7 +278,9 @@ export default function RecentActivityFeed({ participantId, limit = 50 }: Props)
                                                     <span className="text-gray-400">•</span>
                                                     <span>{timeAgo(a.createdAt)}</span>
                                                 </div>
-                                                <div className="mt-1 text-sm text-gray-900">{a.message}</div>
+                                                <div className="mt-1 text-sm text-gray-900 break-words whitespace-pre-wrap leading-relaxed">
+                                                    {a.message}
+                                                </div>
                                             </div>
                                         </div>
                                     </li>
@@ -274,11 +292,4 @@ export default function RecentActivityFeed({ participantId, limit = 50 }: Props)
             </div>
         </section>
     );
-}
-
-/* Optional: hide horizontal scrollbar for filter row (Tailwind-friendly) */
-declare global {
-    interface HTMLElementTagNameMap {
-        style: HTMLStyleElement;
-    }
 }
