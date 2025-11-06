@@ -84,13 +84,13 @@ interface ChallengeCategory {
 }
 
 interface ChallengeType {
-  id: number;
-  category_id: number;
+  id: number | null;
+  category_id?: number;
   name: string;
   unit: string;
   suggested_min: number | null;
   suggested_max: number | null;
-  is_custom: boolean;
+  is_custom?: boolean;
 }
 
 interface Campaign {
@@ -116,8 +116,8 @@ function isValidGoal(unit: string | null, value: string): boolean {
   const s = value.trim();
   if (!s) return false;
   return isDistanceUnit(unit)
-    ? /^\d+(\.\d{1,2})?$/.test(s)   // allow decimals for miles/km
-    : /^\d+$/.test(s);              // whole numbers for other units
+      ? /^\d+(\.\d{1,2})?$/.test(s)   // allow decimals for miles/km
+      : /^\d+$/.test(s);              // whole numbers for other units
 }
 
 function validateParticipantName(name: string): string | null {
@@ -130,13 +130,13 @@ function validateParticipantName(name: string): string | null {
 export default function CreateParticipant() {
   const { user, isPending } = useAuth();
   const navigate = useNavigate();
-  
+
   const [categories, setCategories] = useState<ChallengeCategory[]>([]);
   const [challengeTypes, setChallengeTypes] = useState<ChallengeType[]>([]);
   const [, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Form state
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedChallengeType, setSelectedChallengeType] = useState<number | null>(null);
@@ -167,7 +167,7 @@ export default function CreateParticipant() {
     if (user && !didLoad.current) {
       didLoad.current = true;
       fetchData();
-      
+
       // Prefill participant name with user's display name if available and name is empty
       if (!participantName && user.google_user_data?.given_name) {
         setParticipantName(user.google_user_data.given_name);
@@ -183,7 +183,7 @@ export default function CreateParticipant() {
     try {
       setError(null);
       console.log('Starting to fetch data... (single fetch per mount)');
-      
+
       // Fetch all data in parallel
       const [categoriesRes, campaignsRes] = await Promise.all([
         fetch('/wapi/challenge-categories').catch(err => {
@@ -195,12 +195,12 @@ export default function CreateParticipant() {
           throw new Error('Unable to load campaigns');
         })
       ]);
-      
-      console.log('API responses received:', { 
-        categoriesOk: categoriesRes.ok, 
+
+      console.log('API responses received:', {
+        categoriesOk: categoriesRes.ok,
         categoriesStatus: categoriesRes.status,
-        campaignsOk: campaignsRes.ok, 
-        campaignsStatus: campaignsRes.status 
+        campaignsOk: campaignsRes.ok,
+        campaignsStatus: campaignsRes.status
       });
 
       if (!categoriesRes.ok) {
@@ -358,14 +358,14 @@ export default function CreateParticipant() {
 
     // restore last unit if saved and still allowed
     const saved = (typeof window !== "undefined")
-      ? window.localStorage.getItem(unitPrefKey(user?.id, canonical!, name))
-      : null;
+        ? window.localStorage.getItem(unitPrefKey(user?.id, canonical!, name))
+        : null;
     const chosen = saved && units.includes(saved) ? saved : (units[0] || null);
 
     setUnitOptions(units);
     setSelectedUnit(chosen);
     setError(null);
-    
+
     console.log("Type selected", { id, name, path: id === null ? (name === "Custom" ? "custom" : "placeholder") : "built-in" });
   };
 
@@ -382,7 +382,7 @@ export default function CreateParticipant() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Basic validation checks
     if (!user) {
       setError('User not authenticated');
@@ -423,8 +423,8 @@ export default function CreateParticipant() {
       return;
     }
     const goalNum = isDistanceUnit(selectedUnit)
-  ? parseFloat(goalAmount)
-  : parseInt(goalAmount, 10);
+        ? parseFloat(goalAmount)
+        : parseInt(goalAmount, 10);
 
     if (showCustom && !customChallengeName.trim()) {
       setError('Please provide a challenge name for custom challenge');
@@ -439,10 +439,10 @@ export default function CreateParticipant() {
 
       if (showCustom) {
         // Create true custom challenge type
-        console.log("Creating custom type", { 
-          category_id: selectedCategory, 
-          name: customChallengeName, 
-          unit: selectedUnit 
+        console.log("Creating custom type", {
+          category_id: selectedCategory,
+          name: customChallengeName,
+          unit: selectedUnit
         });
 
         const customPayload: any = {
@@ -469,7 +469,7 @@ export default function CreateParticipant() {
 
         const customTypeData = await customTypeResponse.json();
         const newTypeId = Number(customTypeData?.id);
-        
+
         if (!newTypeId) {
           setError('Custom type create returned no id');
           setSubmitting(false);
@@ -477,16 +477,16 @@ export default function CreateParticipant() {
         }
 
         console.log("Custom type id", newTypeId);
-        
+
         challengeTypeId = newTypeId;
         setSelectedChallengeType(newTypeId);
         setShowCustom(false);
       } else if (challengeTypeId === null && pendingTypeName) {
         // Create missing built-in type for curated placeholder
-        console.log("Creating built-in placeholder type", { 
-          category_id: selectedCategory, 
-          name: pendingTypeName, 
-          unit: selectedUnit 
+        console.log("Creating built-in placeholder type", {
+          category_id: selectedCategory,
+          name: pendingTypeName,
+          unit: selectedUnit
         });
 
         const placeholderPayload: any = {
@@ -513,7 +513,7 @@ export default function CreateParticipant() {
 
         const placeholderTypeData = await placeholderTypeResponse.json();
         const newTypeId = Number(placeholderTypeData?.id);
-        
+
         if (!newTypeId) {
           setError('Built-in placeholder type create returned no id');
           setSubmitting(false);
@@ -521,7 +521,7 @@ export default function CreateParticipant() {
         }
 
         console.log("Built-in placeholder created", newTypeId);
-        
+
         challengeTypeId = newTypeId;
         setSelectedChallengeType(newTypeId);
         setPendingTypeName(null);
@@ -555,14 +555,14 @@ export default function CreateParticipant() {
           statusText: participantResponse.statusText,
           errorText: errorText
         });
-        
+
         let errorData;
         try {
           errorData = JSON.parse(errorText);
         } catch {
           errorData = { error: errorText };
         }
-        
+
         throw new Error(errorData.error || `Participant creation failed: ${participantResponse.status} - ${errorText}`);
       }
 
@@ -575,9 +575,9 @@ export default function CreateParticipant() {
             await fetch('/wapi/user-notification-preferences', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                email_challenge_reminders: emailRemindersOptIn, 
-                email_donor_updates: emailDonorUpdates 
+              body: JSON.stringify({
+                email_challenge_reminders: emailRemindersOptIn,
+                email_donor_updates: emailDonorUpdates
               })
             });
           } catch (prefsError) {
@@ -607,559 +607,560 @@ export default function CreateParticipant() {
   };
 
   const goalDisplay =
-  isDistanceUnit(selectedUnit)
-    ? (goalAmount ? parseFloat(goalAmount) : undefined)
-    : (goalAmount ? parseInt(goalAmount, 10) : undefined);
+      isDistanceUnit(selectedUnit)
+          ? (goalAmount ? parseFloat(goalAmount) : undefined)
+          : (goalAmount ? parseInt(goalAmount, 10) : undefined);
 
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin mx-auto mb-4">
-            <div className="w-10 h-10 border-4 border-gray-200 border-t-bfrs-electric rounded-full"></div>
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
+          <div className="text-center">
+            <div className="animate-spin mx-auto mb-4">
+              <div className="w-10 h-10 border-4 border-gray-200 border-t-bfrs-electric rounded-full"></div>
+            </div>
+            <p className="text-gray-600">Checking authentication...</p>
+            <p className="text-xs text-gray-500 mt-2">If this takes too long, you'll be redirected to sign in again</p>
+            <button
+                onClick={() => navigate('/')}
+                className="mt-4 text-bfrs-electric hover:text-bfrs-electric-dark text-sm underline"
+            >
+              Go to Home Page
+            </button>
           </div>
-          <p className="text-gray-600">Checking authentication...</p>
-          <p className="text-xs text-gray-500 mt-2">If this takes too long, you'll be redirected to sign in again</p>
-          <button 
-            onClick={() => navigate('/')} 
-            className="mt-4 text-bfrs-electric hover:text-bfrs-electric-dark text-sm underline"
-          >
-            Go to Home Page
-          </button>
         </div>
-      </div>
     );
   }
 
   if (loading && user) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin mx-auto mb-4">
-            <div className="w-10 h-10 border-4 border-gray-200 border-t-bfrs-electric rounded-full"></div>
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
+          <div className="text-center">
+            <div className="animate-spin mx-auto mb-4">
+              <div className="w-10 h-10 border-4 border-gray-200 border-t-bfrs-electric rounded-full"></div>
+            </div>
+            <p className="text-gray-600">Loading challenge data...</p>
           </div>
-          <p className="text-gray-600">Loading challenge data...</p>
         </div>
-      </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.502 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-black mb-2">Authentication Required</h2>
-          <p className="text-gray-600 mb-4">Your session has expired. Please sign in again to create your campaign.</p>
-          <div className="space-y-3">
-            <button
-              onClick={() => window.location.href = '/'}
-              className="w-full bg-bfrs-electric text-black px-4 py-2 rounded-lg hover:bg-bfrs-electric-dark transition-colors font-semibold"
-            >
-              Sign In Again
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Refresh Page
-            </button>
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.502 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-black mb-2">Authentication Required</h2>
+            <p className="text-gray-600 mb-4">Your session has expired. Please sign in again to create your campaign.</p>
+            <div className="space-y-3">
+              <button
+                  onClick={() => window.location.href = '/'}
+                  className="w-full bg-bfrs-electric text-black px-4 py-2 rounded-lg hover:bg-bfrs-electric-dark transition-colors font-semibold"
+              >
+                Sign In Again
+              </button>
+              <button
+                  onClick={() => window.location.reload()}
+                  className="w-full border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Refresh Page
+              </button>
+            </div>
           </div>
         </div>
-      </div>
     );
   }
 
   const selectedChallengeTypeData = challengeTypes.find(ct => ct.id === selectedChallengeType);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="mr-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-              <img 
-                src="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg" 
-                alt="Brain Fog Recovery Source Logo" 
-                className="w-10 h-10 rounded-lg mr-3"
-              />
-              <div>
-                <h1 className="text-2xl font-bold text-black">Create Your Challenge</h1>
-                <p className="text-gray-600">Set up your metabolic challenge fundraiser</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Link
-                to="/browse"
-                className="text-gray-600 hover:text-black transition-colors font-medium"
-              >
-                Browse Campaigns
-              </Link>
-              <a
-                href="https://www.every.org/brain-fog-recovery-source?donateTo=brain-fog-recovery-source#/donate/card"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-bfrs-electric text-black px-4 py-2 rounded-lg font-semibold hover:bg-bfrs-electric-dark transition-colors shadow-sm"
-              >
-                Donate Now
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 text-sm">{error}</p>
-          </div>
-        )}
-
-        <form 
-          onSubmit={(e) => {
-            console.log('📝 FORM onSubmit event triggered!', {
-              eventType: e.type,
-              formElements: e.currentTarget.elements.length,
-              timestamp: new Date().toISOString()
-            });
-            handleSubmit(e);
-          }}
-          className="space-y-8"
-        >
-          {/* Step 1: Choose Category */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm font-bold mr-3">
-                1
-              </div>
-              <h2 className="text-xl font-semibold text-black">Choose Challenge Category</h2>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categories.map((category) => {
-                // Map canonical categories to appropriate icons
-                const getIconForCategory = (category: any) => {
-                  const canonical = idToCanonicalRef.current[category.id];
-                  switch (canonical) {
-                    case "Heat or Cold Exposure": return <Snowflake className="w-6 h-6 text-blue-500" />;
-                    case "Exercise & Movement": return <Activity className="w-6 h-6 text-orange-500" />;
-                    case "Meal Timing": return <Clock className="w-6 h-6 text-purple-500" />;
-                    case "Light & Circadian": return <Sun className="w-6 h-6 text-yellow-500" />;
-                    case "Low Carb & Ketogenic": return <Salad className="w-6 h-6 text-green-500" />;
-                    case "Meditation & Mindfulness": return <Brain className="w-6 h-6 text-indigo-500" />;
-                    case "Sleep Optimization": return <Moon className="w-6 h-6 text-gray-700" />;
-                    default: return <Zap className="w-6 h-6 text-red-500" />;
-                  }
-                };
-                
-                return (
-                  <button
-                    key={category.id ?? category.name}
-                    type="button"
-                    onClick={() => handleCategorySelect(category.id)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
-                      selectedCategory === category.id
-                        ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10 shadow-lg'
-                        : 'border-gray-200 hover:border-bfrs-electric hover:bg-gray-50 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 mt-1">{getIconForCategory(category)}</div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-black">{category.name}</h3>
-                        {category.description && (
-                          <p className="text-sm text-gray-600 mt-1">{category.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Step 2: Choose Challenge Type */}
-          {selectedCategory && (
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm font-bold mr-3">
-                  2
-                </div>
-                <h2 className="text-xl font-semibold text-black">Choose Specific Challenge</h2>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                {challengeTypes.filter(challengeType => challengeType.name !== "Custom").map((challengeType) => {
-                  const isSelected = selectedChallengeType === challengeType.id || 
-                                   (pendingTypeName === challengeType.name && challengeType.id === null);
-                  
-                  return (
-                    <button
-                      key={challengeType.id ?? challengeType.name}
-                      type="button"
-                      onClick={() => handleChallengeTypeSelect(challengeType.id, challengeType.name)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        isSelected
-                          ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                      }`}
-                    >
-                      <h3 className="font-semibold text-black">{challengeType.name}</h3>
-                      {challengeType.suggested_min && challengeType.suggested_max && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Suggested: {challengeType.suggested_min}-{challengeType.suggested_max} {challengeType.unit}
-                        </p>
-                      )}
-                    </button>
-                  );
-                })}
-                
-                {/* Custom Option */}
+      <div className="min-h-screen bg-white">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40 [padding-top:env(safe-area-inset-top)]">
+          <div className="mx-auto w-full max-w-screen-lg px-3 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+              <div className="flex items-center min-w-0 gap-3">
                 <button
-                  type="button"
-                  onClick={() => handleChallengeTypeSelect(null, "Custom")}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${
-                    showCustom
-                      ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
+                    onClick={() => navigate('/dashboard')}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label="Back to dashboard"
                 >
-                  <div className="flex items-center">
-                    <Plus className="w-5 h-5 text-bfrs-electric mr-2" />
-                    <div>
-                      <h3 className="font-semibold text-black">Create Custom Challenge</h3>
-                      <p className="text-sm text-gray-600 mt-1">Design your own challenge</p>
-                    </div>
-                  </div>
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
+                <img
+                    src="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg"
+                    alt="Brain Fog Recovery Source Logo"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
+                />
+                <div className="min-w-0">
+                  <h1 className="text-base sm:text-2xl font-bold text-black truncate">Create Your Challenge</h1>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden xs:block">Set up your metabolic challenge fundraiser</p>
+                </div>
               </div>
-
-              {(showCustom || selectedChallengeType !== null || pendingTypeName) && unitOptions.length > 0 && (
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
-                  <select
-                    className="mt-1 block w-48 border border-gray-300 rounded-md p-2"
-                    value={selectedUnit || ""}
-                    onChange={(e) => {
-                      const canonical = idToCanonicalRef.current[selectedCategory!];
-                      const name = showCustom ? (customChallengeName || "Custom")
-                        : (pendingTypeName || challengeTypes.find(t => t.id === selectedChallengeType)?.name || "");
-                      const val = e.target.value;
-                      setSelectedUnit(val);
-                      if (canonical && name && typeof window !== "undefined") {
-                        window.localStorage.setItem(unitPrefKey(user?.id, canonical, name), val);
-                      }
-                    }}
-                  >
-                    {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                </div>
-              )}
-
-              {/* Custom Challenge Form */}
-              {showCustom && (
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 className="font-medium text-black mb-3">Custom Challenge Details</h4>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Challenge Name
-                      </label>
-                      <input
-                        type="text"
-                        value={customChallengeName}
-                        onChange={(e) => setCustomChallengeName(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
-                        placeholder="e.g., Meditation Sessions"
-                        required={showCustom}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Unit of Measurement
-                      </label>
-                      <input
-                        type="text"
-                        value={customUnit}
-                        onChange={(e) => setCustomUnit(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
-                        placeholder="e.g., sessions, minutes, days"
-                        required={showCustom}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <Link
+                    to="/browse"
+                    className="text-gray-600 hover:text-black transition-colors font-medium text-sm sm:text-base"
+                >
+                  Browse Campaigns
+                </Link>
+                <a
+                    href="https://www.every.org/brain-fog-recovery-source?donateTo=brain-fog-recovery-source#/donate/card"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-bfrs-electric text-black px-3 sm:px-4 py-2 rounded-lg font-semibold hover:bg-bfrs-electric-dark transition-colors shadow-sm text-sm sm:text-base"
+                >
+                  Donate Now
+                </a>
+              </div>
             </div>
+          </div>
+        </header>
+
+        <div className="mx-auto w-full max-w-screen-lg px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800 text-sm">{error}</p>
+              </div>
           )}
 
-          {/* Step 3: Set Goal */}
-          {(() => {
-            const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
-            return canProceed && (
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <form
+              onSubmit={(e) => {
+                console.log('📝 FORM onSubmit event triggered!', {
+                  eventType: e.type,
+                  formElements: e.currentTarget.elements.length,
+                  timestamp: new Date().toISOString()
+                });
+                handleSubmit(e);
+              }}
+              className="space-y-8"
+          >
+            {/* Step 1: Choose Category */}
+            <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm font-bold mr-3">
-                  3
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                  1
                 </div>
-                <h2 className="text-xl font-semibold text-black">Set Your Goal</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-black">Choose Challenge Category</h2>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Your name (required)
-                  </label>
-                  <input
-                    ref={nameInputRef}
-                    type="text"
-                    value={participantName}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric ${
-                      nameError ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter your name"
-                    maxLength={80}
-                    required
-                  />
-                  {nameError && (
-                    <p className="text-sm text-red-600 mt-1">{nameError}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {categories.map((category) => {
+                  // Map canonical categories to appropriate icons
+                  const getIconForCategory = (category: any) => {
+                    const canonical = idToCanonicalRef.current[category.id];
+                    switch (canonical) {
+                      case "Heat or Cold Exposure": return <Snowflake className="w-6 h-6 text-blue-500" />;
+                      case "Exercise & Movement": return <Activity className="w-6 h-6 text-orange-500" />;
+                      case "Meal Timing": return <Clock className="w-6 h-6 text-purple-500" />;
+                      case "Light & Circadian": return <Sun className="w-6 h-6 text-yellow-500" />;
+                      case "Low Carb & Ketogenic": return <Salad className="w-6 h-6 text-green-500" />;
+                      case "Meditation & Mindfulness": return <Brain className="w-6 h-6 text-indigo-500" />;
+                      case "Sleep Optimization": return <Moon className="w-6 h-6 text-gray-700" />;
+                      default: return <Zap className="w-6 h-6 text-red-500" />;
+                    }
+                  };
+
+                  return (
+                      <button
+                          key={category.id ?? category.name}
+                          type="button"
+                          onClick={() => handleCategorySelect(category.id)}
+                          className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                              selectedCategory === category.id
+                                  ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10 shadow-lg'
+                                  : 'border-gray-200 hover:border-bfrs-electric hover:bg-gray-50 bg-white'
+                          }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 mt-1">{getIconForCategory(category)}</div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-black truncate">{category.name}</h3>
+                            {category.description && (
+                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{category.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Step 2: Choose Challenge Type */}
+            {selectedCategory && (
+                <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
+                  <div className="flex items-center mb-4">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                      2
+                    </div>
+                    <h2 className="text-lg sm:text-xl font-semibold text-black">Choose Specific Challenge</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    {challengeTypes.filter(challengeType => challengeType.name !== "Custom").map((challengeType) => {
+                      const isSelected = selectedChallengeType === challengeType.id ||
+                          (pendingTypeName === challengeType.name && challengeType.id === null);
+
+                      return (
+                          <button
+                              key={challengeType.id ?? challengeType.name}
+                              type="button"
+                              onClick={() => handleChallengeTypeSelect(challengeType.id, challengeType.name)}
+                              className={`p-4 rounded-xl border-2 text-left transition-all ${
+                                  isSelected
+                                      ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10'
+                                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                              }`}
+                          >
+                            <h3 className="font-semibold text-black">{challengeType.name}</h3>
+                            {challengeType.suggested_min && challengeType.suggested_max && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Suggested: {challengeType.suggested_min}-{challengeType.suggested_max} {challengeType.unit}
+                                </p>
+                            )}
+                          </button>
+                      );
+                    })}
+
+                    {/* Custom Option */}
+                    <button
+                        type="button"
+                        onClick={() => handleChallengeTypeSelect(null, "Custom")}
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${
+                            showCustom
+                                ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10'
+                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
+                    >
+                      <div className="flex items-center">
+                        <Plus className="w-5 h-5 text-bfrs-electric mr-2" />
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-black">Create Custom Challenge</h3>
+                          <p className="text-sm text-gray-600 mt-1">Design your own challenge</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {(showCustom || selectedChallengeType !== null || pendingTypeName) && unitOptions.length > 0 && (
+                      <div className="mt-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                        <select
+                            className="mt-1 block w-full sm:w-56 border border-gray-300 rounded-md p-2"
+                            value={selectedUnit || ""}
+                            onChange={(e) => {
+                              const canonical = idToCanonicalRef.current[selectedCategory!];
+                              const name = showCustom ? (customChallengeName || "Custom")
+                                  : (pendingTypeName || challengeTypes.find(t => t.id === selectedChallengeType)?.name || "");
+                              const val = e.target.value;
+                              setSelectedUnit(val);
+                              if (canonical && name && typeof window !== "undefined") {
+                                window.localStorage.setItem(unitPrefKey(user?.id, canonical, name), val);
+                              }
+                            }}
+                        >
+                          {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+                        </select>
+                      </div>
+                  )}
+
+                  {/* Custom Challenge Form */}
+                  {showCustom && (
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 className="font-medium text-black mb-3">Custom Challenge Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Challenge Name
+                            </label>
+                            <input
+                                type="text"
+                                value={customChallengeName}
+                                onChange={(e) => setCustomChallengeName(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
+                                placeholder="e.g., Meditation Sessions"
+                                required={showCustom}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Unit of Measurement
+                            </label>
+                            <input
+                                type="text"
+                                value={customUnit}
+                                onChange={(e) => setCustomUnit(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
+                                placeholder="e.g., sessions, minutes, days"
+                                required={showCustom}
+                            />
+                          </div>
+                        </div>
+                      </div>
                   )}
                 </div>
+            )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Goal Amount
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      step={isDistanceUnit(selectedUnit) ? '0.01' : '1'}
-                      min={isDistanceUnit(selectedUnit) ? '0.01' : '1'}
-                      value={goalAmount}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setGoalAmount(value);
-                        if (value && !isValidGoal(selectedUnit, value)) {
-                        setError(
-                          isDistanceUnit(selectedUnit)
-                            ? 'For miles/km you can enter decimals (e.g., 1.25).'
-                            : 'Only whole numbers are allowed for this unit.'
-                        );
-                      } else {
-                        setError(null);
-                      }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric pr-20"
-                      placeholder="Enter your goal"
-                      required
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            {/* Step 3: Set Goal */}
+            {(() => {
+              const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
+              return canProceed && (
+                  <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-4">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                        3
+                      </div>
+                      <h2 className="text-lg sm:text-xl font-semibold text-black">Set Your Goal</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Your name (required)
+                        </label>
+                        <input
+                            ref={nameInputRef}
+                            type="text"
+                            value={participantName}
+                            onChange={(e) => handleNameChange(e.target.value)}
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric ${
+                                nameError ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                            placeholder="Enter your name"
+                            maxLength={80}
+                            required
+                        />
+                        {nameError && (
+                            <p className="text-sm text-red-600 mt-1">{nameError}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Goal Amount
+                        </label>
+                        <div className="relative">
+                          <input
+                              type="number"
+                              inputMode="decimal"
+                              step={isDistanceUnit(selectedUnit) ? '0.01' : '1'}
+                              min={isDistanceUnit(selectedUnit) ? '0.01' : '1'}
+                              value={goalAmount}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setGoalAmount(value);
+                                if (value && !isValidGoal(selectedUnit, value)) {
+                                  setError(
+                                      isDistanceUnit(selectedUnit)
+                                          ? 'For miles/km you can enter decimals (e.g., 1.25).'
+                                          : 'Only whole numbers are allowed for this unit.'
+                                  );
+                                } else {
+                                  setError(null);
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric pr-24"
+                              placeholder="Enter your goal"
+                              required
+                          />
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                       <span className="text-gray-500 text-sm">
                         {selectedUnit || "units"}
                       </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {isDistanceUnit(selectedUnit)
+                              ? 'Decimals allowed for miles/km (up to 2 decimals).'
+                              : 'Enter a whole number for this unit'}
+                        </p>
+                        {selectedChallengeTypeData?.suggested_min && selectedChallengeTypeData?.suggested_max && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Suggested range: {selectedChallengeTypeData.suggested_min}-{selectedChallengeTypeData.suggested_max} {selectedChallengeTypeData.unit}
+                            </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          About Your Challenge (Optional)
+                        </label>
+                        <textarea
+                            value={bio}
+                            onChange={(e) => setBio(e.target.value)}
+                            rows={4}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
+                            placeholder="Share why you're taking on this challenge and how it relates to your journey with metabolic health..."
+                            maxLength={500}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">{bio.length}/500 characters</p>
+                      </div>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                  {isDistanceUnit(selectedUnit)
-                    ? 'Decimals allowed for miles/km (up to 2 decimals).'
-                    : 'Enter a whole number for this unit'}
-                </p>
-                  {selectedChallengeTypeData?.suggested_min && selectedChallengeTypeData?.suggested_max && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      Suggested range: {selectedChallengeTypeData.suggested_min}-{selectedChallengeTypeData.suggested_max} {selectedChallengeTypeData.unit}
+              );
+            })()}
+
+            {/* Step 4: Email Reminders */}
+            {(() => {
+              const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
+              return canProceed && goalAmount && (
+                  <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-4">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                        4
+                      </div>
+                      <h2 className="text-lg sm:text-xl font-semibold text-black">Email Reminders</h2>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex items-center h-5">
+                          <input
+                              id="weekly-challenge-reminders"
+                              type="checkbox"
+                              checked={emailRemindersOptIn}
+                              onChange={(e) => setEmailRemindersOptIn(e.target.checked)}
+                              className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
+                          />
+                        </div>
+                        <div className="text-sm">
+                          <label htmlFor="weekly-challenge-reminders" className="font-medium text-black cursor-pointer">
+                            Weekly Challenge Reminders
+                          </label>
+                          <p className="text-gray-600 mt-1">Get weekly email reminders to update your challenge progress.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-3">
+                        <div className="flex items-center h-5">
+                          <input
+                              id="weekly-donor-updates"
+                              type="checkbox"
+                              checked={emailDonorUpdates}
+                              onChange={(e) => setEmailDonorUpdates(e.target.checked)}
+                              className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
+                          />
+                        </div>
+                        <div className="text-sm">
+                          <label htmlFor="weekly-donor-updates" className="font-medium text-black cursor-pointer">
+                            Weekly Donor Updates
+                          </label>
+                          <p className="text-gray-600 mt-1">Donors who support you will receive weekly progress updates via email.</p>
+                        </div>
+                      </div>
+
+                      <div className="text-center">
+                        <p className="text-sm text-gray-500">
+                          Weekly emails are sent every Monday at 9 AM and can be unsubscribed at any time.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+              );
+            })()}
+
+            {/* Step 5: Health Disclaimer */}
+            {(() => {
+              const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
+              return canProceed && goalAmount && (
+                  <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-4">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                        5
+                      </div>
+                      <h2 className="text-lg sm:text-xl font-semibold text-black">Health & Safety Confirmation</h2>
+                    </div>
+
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-orange-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-orange-800">Important Health Notice</h3>
+                          <p className="text-sm text-orange-700 mt-1">
+                            Please ensure you are physically capable of completing your chosen challenge safely.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-3">
+                      <div className="flex items-center h-5">
+                        <input
+                            id="health-confirmation"
+                            type="checkbox"
+                            checked={Boolean(healthConfirmed)}
+                            onChange={(e) => {
+                              console.log('Health checkbox changed:', e.target.checked);
+                              setHealthConfirmed(Boolean(e.target.checked));
+                            }}
+                            className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
+                        />
+                      </div>
+                      <div className="text-sm">
+                        <label htmlFor="health-confirmation" className="font-medium text-black cursor-pointer">
+                          I confirm I am physically fit and in good health to participate in my selected challenge. If I have concerns about my health or abilities, I will consult a healthcare provider before participating. By checking this box, I release Brain Fog Recovery Source from responsibility related to my participation.
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+              );
+            })()}
+
+            {/* Submit Button */}
+            {(() => {
+              const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
+              const selectedTypeName = pendingTypeName || (challengeTypes.find(t => t.id === selectedChallengeType)?.name) || (showCustom ? customChallengeName : "");
+              return canProceed && goalAmount && (
+                  <div className="bg-bfrs-electric rounded-2xl p-6 sm:p-8 text-center">
+                    <h3 className="text-xl sm:text-2xl font-bold text-black mb-3 sm:mb-4">Ready to Start?</h3>
+                    <p className="text-black mb-5 sm:mb-6 text-sm sm:text-base">
+                      You are about to create a campaign to complete <strong>{goalDisplay} {selectedUnit}</strong> of <strong>{selectedTypeName}</strong>.
+                      <br />
+                      Your supporters will pledge a dollar amount for each <strong>{selectedUnit}</strong> you complete.
+                      <br /><br />
+                      <strong>How it works:</strong> The more you accomplish, the more funds you raise for psychiatric recovery support!
                     </p>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    About Your Challenge (Optional)
-                  </label>
-                  <textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
-                    placeholder="Share why you're taking on this challenge and how it relates to your journey with metabolic health..."
-                    maxLength={500}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{bio.length}/500 characters</p>
-                </div>
-              </div>
-            </div>
-          );
-          })()}
+                    {error && (
+                        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-red-800 text-sm">{error}</p>
+                        </div>
+                    )}
 
-          {/* Step 4: Email Reminders */}
-          {(() => {
-            const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
-            return canProceed && goalAmount && (
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm font-bold mr-3">
-                  4
-                </div>
-                <h2 className="text-xl font-semibold text-black">Email Reminders</h2>
-              </div>
+                    <button
+                        type="submit"
+                        disabled={submitting || !Boolean(healthConfirmed) || !selectedCampaign || !canProceed || !goalAmount}
+                        className="w-full sm:w-auto bg-black text-bfrs-electric px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center"
+                    >
+                      {submitting ? (
+                          <>
+                            <div className="animate-spin w-5 h-5 border-2 border-bfrs-electric border-t-transparent rounded-full mr-2"></div>
+                            Creating Campaign...
+                          </>
+                      ) : (
+                          'Create My Campaign'
+                      )}
+                    </button>
 
-              <div className="space-y-6">
-                <div className="flex items-start space-x-3">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="weekly-challenge-reminders"
-                      type="checkbox"
-                      checked={emailRemindersOptIn}
-                      onChange={(e) => setEmailRemindersOptIn(e.target.checked)}
-                      className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
-                    />
+                    {!Boolean(healthConfirmed) && (
+                        <p className="mt-4 text-sm text-black bg-white bg-opacity-20 rounded p-2">
+                          ⚠️ Please complete the health confirmation above to enable the button
+                        </p>
+                    )}
                   </div>
-                  <div className="text-sm">
-                    <label htmlFor="weekly-challenge-reminders" className="font-medium text-black cursor-pointer">
-                      Weekly Challenge Reminders
-                    </label>
-                    <p className="text-gray-600 mt-1">Get weekly email reminders to update your challenge progress.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="weekly-donor-updates"
-                      type="checkbox"
-                      checked={emailDonorUpdates}
-                      onChange={(e) => setEmailDonorUpdates(e.target.checked)}
-                      className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
-                    />
-                  </div>
-                  <div className="text-sm">
-                    <label htmlFor="weekly-donor-updates" className="font-medium text-black cursor-pointer">
-                      Weekly Donor Updates
-                    </label>
-                    <p className="text-gray-600 mt-1">Donors who support you will receive weekly progress updates via email.</p>
-                  </div>
-                </div>
-
-                <div className="text-center">
-                  <p className="text-sm text-gray-500">
-                    Weekly emails are sent every Monday at 9 AM and can be unsubscribed at any time.
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-          })()}
-
-          {/* Step 5: Health Disclaimer */}
-          {(() => {
-            const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
-            return canProceed && goalAmount && (
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm font-bold mr-3">
-                  5
-                </div>
-                <h2 className="text-xl font-semibold text-black">Health & Safety Confirmation</h2>
-              </div>
-
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <svg className="w-5 h-5 text-orange-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-orange-800">Important Health Notice</h3>
-                    <p className="text-sm text-orange-700 mt-1">
-                      Please ensure you are physically capable of completing your chosen challenge safely.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <div className="flex items-center h-5">
-                  <input
-                    id="health-confirmation"
-                    type="checkbox"
-                    checked={Boolean(healthConfirmed)}
-                    onChange={(e) => {
-                      console.log('Health checkbox changed:', e.target.checked);
-                      setHealthConfirmed(Boolean(e.target.checked));
-                    }}
-                    className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
-                  />
-                </div>
-                <div className="text-sm">
-                  <label htmlFor="health-confirmation" className="font-medium text-black cursor-pointer">
-                    I confirm I am physically fit and in good health to participate in my selected challenge. If I have concerns about my health or abilities, I will consult a healthcare provider before participating. By checking this box, I release Brain Fog Recovery Source from responsibility related to my participation.
-                  </label>
-                </div>
-              </div>
-            </div>
-          );
-          })()}
-
-          {/* Submit Button */}
-          {(() => {
-            const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
-            const selectedTypeName = pendingTypeName || (challengeTypes.find(t => t.id === selectedChallengeType)?.name) || (showCustom ? customChallengeName : "");
-            return canProceed && goalAmount && (
-            <div className="bg-bfrs-electric rounded-2xl p-8 text-center">
-              <h3 className="text-2xl font-bold text-black mb-4">Ready to Start?</h3>
-              <p className="text-black mb-6">
-                You are about to create a campaign to complete <strong>{goalDisplay} {selectedUnit}</strong> of <strong>{selectedTypeName}</strong>.
-                <br />
-                Your supporters will pledge a dollar amount for each <strong>{selectedUnit}</strong> you complete.
-                <br /><br />
-                <strong>How it works:</strong> The more you accomplish, the more funds you raise for psychiatric recovery support!
-              </p>
-              
-              {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-800 text-sm">{error}</p>
-                </div>
-              )}
-              
-              <button
-                type="submit"
-                disabled={submitting || !Boolean(healthConfirmed) || !selectedCampaign || !canProceed || !goalAmount}
-                className="bg-black text-bfrs-electric px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center mx-auto"
-              >
-                {submitting ? (
-                  <>
-                    <div className="animate-spin w-5 h-5 border-2 border-bfrs-electric border-t-transparent rounded-full mr-2"></div>
-                    Creating Campaign...
-                  </>
-                ) : (
-                  'Create My Campaign'
-                )}
-              </button>
-              
-              {!Boolean(healthConfirmed) && (
-                <p className="mt-4 text-sm text-black bg-white bg-opacity-20 rounded p-2">
-                  ⚠️ Please complete the health confirmation above to enable the button
-                </p>
-              )}
-            </div>
-            );
-          })()}
-        </form>
+              );
+            })()}
+          </form>
+        </div>
       </div>
-    </div>
   );
 }
