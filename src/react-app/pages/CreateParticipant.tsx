@@ -740,12 +740,15 @@ export default function CreateParticipant() {
               className="space-y-8"
           >
             {/* Step 1: Choose Category */}
-            <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center mb-4">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center mb-5 sm:mb-6">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm sm:text-base font-bold mr-3 flex-shrink-0">
                   1
                 </div>
-                <h2 className="text-lg sm:text-xl font-semibold text-black">Choose Challenge Category</h2>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-semibold text-black leading-tight">Choose Challenge Category</h2>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Select the type of challenge you want to take on</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -770,18 +773,18 @@ export default function CreateParticipant() {
                           key={category.id ?? category.name}
                           type="button"
                           onClick={() => handleCategorySelect(category.id)}
-                          className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                          className={`p-4 sm:p-5 rounded-xl border-2 text-left transition-all hover:shadow-md active:scale-[0.98] ${
                               selectedCategory === category.id
-                                  ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10 shadow-lg'
+                                  ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10 shadow-lg ring-2 ring-bfrs-electric/20'
                                   : 'border-gray-200 hover:border-bfrs-electric hover:bg-gray-50 bg-white'
                           }`}
                       >
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0 mt-1">{getIconForCategory(category)}</div>
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <div className="flex-shrink-0 mt-0.5">{getIconForCategory(category)}</div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-black truncate">{category.name}</h3>
+                            <h3 className="text-sm sm:text-base font-semibold text-black leading-tight mb-1">{category.name}</h3>
                             {category.description && (
-                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{category.description}</p>
+                                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2">{category.description}</p>
                             )}
                           </div>
                         </div>
@@ -793,12 +796,15 @@ export default function CreateParticipant() {
 
             {/* Step 2: Choose Challenge Type */}
             {selectedCategory && (
-                <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
-                  <div className="flex items-center mb-4">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+                  <div className="flex items-center mb-5 sm:mb-6">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm sm:text-base font-bold mr-3 flex-shrink-0">
                       2
                     </div>
-                    <h2 className="text-lg sm:text-xl font-semibold text-black">Choose Specific Challenge</h2>
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-xl font-semibold text-black leading-tight">Choose Specific Challenge</h2>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Pick your preferred challenge type</p>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
@@ -811,15 +817,15 @@ export default function CreateParticipant() {
                               key={challengeType.id ?? challengeType.name}
                               type="button"
                               onClick={() => handleChallengeTypeSelect(challengeType.id, challengeType.name)}
-                              className={`p-4 rounded-xl border-2 text-left transition-all ${
+                              className={`p-4 sm:p-5 rounded-xl border-2 text-left transition-all active:scale-[0.98] ${
                                   isSelected
-                                      ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10'
-                                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                                      ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10 ring-2 ring-bfrs-electric/20 shadow-sm'
+                                      : 'border-gray-200 hover:border-bfrs-electric hover:bg-gray-50 bg-white'
                               }`}
                           >
-                            <h3 className="font-semibold text-black">{challengeType.name}</h3>
+                            <h3 className="text-sm sm:text-base font-semibold text-black leading-tight mb-1">{challengeType.name}</h3>
                             {challengeType.suggested_min && challengeType.suggested_max && (
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
                                   Suggested: {challengeType.suggested_min}-{challengeType.suggested_max} {challengeType.unit}
                                 </p>
                             )}
@@ -831,27 +837,27 @@ export default function CreateParticipant() {
                     <button
                         type="button"
                         onClick={() => handleChallengeTypeSelect(null, "Custom")}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        className={`p-4 sm:p-5 rounded-xl border-2 text-left transition-all active:scale-[0.98] ${
                             showCustom
-                                ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10'
-                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                                ? 'border-bfrs-electric bg-bfrs-electric bg-opacity-10 ring-2 ring-bfrs-electric/20 shadow-sm'
+                                : 'border-gray-200 hover:border-bfrs-electric hover:bg-gray-50 bg-white'
                         }`}
                     >
-                      <div className="flex items-center">
-                        <Plus className="w-5 h-5 text-bfrs-electric mr-2" />
+                      <div className="flex items-center gap-3">
+                        <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-bfrs-electric flex-shrink-0" />
                         <div className="min-w-0">
-                          <h3 className="font-semibold text-black">Create Custom Challenge</h3>
-                          <p className="text-sm text-gray-600 mt-1">Design your own challenge</p>
+                          <h3 className="text-sm sm:text-base font-semibold text-black leading-tight mb-1">Create Custom Challenge</h3>
+                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Design your own challenge</p>
                         </div>
                       </div>
                     </button>
                   </div>
 
                   {(showCustom || selectedChallengeType !== null || pendingTypeName) && unitOptions.length > 0 && (
-                      <div className="mt-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                      <div className="mt-5 sm:mt-6">
+                        <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2">Unit</label>
                         <select
-                            className="mt-1 block w-full sm:w-56 border border-gray-300 rounded-md p-2"
+                            className="block w-full sm:w-64 border-2 border-gray-300 rounded-lg px-4 py-3 text-sm sm:text-base bg-white focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric transition-colors"
                             value={selectedUnit || ""}
                             onChange={(e) => {
                               const canonical = idToCanonicalRef.current[selectedCategory!];
@@ -871,31 +877,31 @@ export default function CreateParticipant() {
 
                   {/* Custom Challenge Form */}
                   {showCustom && (
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h4 className="font-medium text-black mb-3">Custom Challenge Details</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="mt-5 sm:mt-6 p-4 sm:p-5 bg-gray-50 rounded-lg border-2 border-gray-200">
+                        <h4 className="text-sm sm:text-base font-semibold text-black mb-4 sm:mb-5">Custom Challenge Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Challenge Name
+                            <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2">
+                              Challenge Name <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={customChallengeName}
                                 onChange={(e) => setCustomChallengeName(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
+                                className="w-full px-4 py-3 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric bg-white transition-colors"
                                 placeholder="e.g., Meditation Sessions"
                                 required={showCustom}
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Unit of Measurement
+                            <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2">
+                              Unit of Measurement <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={customUnit}
                                 onChange={(e) => setCustomUnit(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
+                                className="w-full px-4 py-3 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric bg-white transition-colors"
                                 placeholder="e.g., sessions, minutes, days"
                                 required={showCustom}
                             />
@@ -910,39 +916,47 @@ export default function CreateParticipant() {
             {(() => {
               const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
               return canProceed && (
-                  <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
-                    <div className="flex items-center mb-4">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                  <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-5 sm:mb-6">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm sm:text-base font-bold mr-3 flex-shrink-0">
                         3
                       </div>
-                      <h2 className="text-lg sm:text-xl font-semibold text-black">Set Your Goal</h2>
+                      <div className="min-w-0">
+                        <h2 className="text-base sm:text-xl font-semibold text-black leading-tight">Set Your Goal</h2>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Define your challenge target</p>
+                      </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-5 sm:space-y-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Your name (required)
+                        <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2">
+                          Your name <span className="text-red-500">*</span>
                         </label>
                         <input
                             ref={nameInputRef}
                             type="text"
                             value={participantName}
                             onChange={(e) => handleNameChange(e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric ${
-                                nameError ? 'border-red-300' : 'border-gray-300'
+                            className={`w-full px-4 py-3 text-sm sm:text-base border-2 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric transition-colors ${
+                                nameError ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'
                             }`}
                             placeholder="Enter your name"
                             maxLength={80}
                             required
                         />
                         {nameError && (
-                            <p className="text-sm text-red-600 mt-1">{nameError}</p>
+                            <p className="text-xs sm:text-sm text-red-600 mt-2 flex items-center gap-1">
+                              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              {nameError}
+                            </p>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Goal Amount
+                        <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2">
+                          Goal Amount <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                           <input
@@ -964,41 +978,49 @@ export default function CreateParticipant() {
                                   setError(null);
                                 }
                               }}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric pr-24"
+                              className="w-full px-4 py-3 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric bg-white transition-colors pr-20 sm:pr-24"
                               placeholder="Enter your goal"
                               required
                           />
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <span className="text-gray-500 text-sm">
-                        {selectedUnit || "units"}
-                      </span>
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                            <span className="text-sm sm:text-base font-medium text-gray-600">
+                              {selectedUnit || "units"}
+                            </span>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {isDistanceUnit(selectedUnit)
-                              ? 'Decimals allowed for miles/km (up to 2 decimals).'
-                              : 'Enter a whole number for this unit'}
+                        <p className="text-xs sm:text-sm text-gray-500 mt-2 flex items-start gap-1.5">
+                          <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>
+                            {isDistanceUnit(selectedUnit)
+                                ? 'Decimals allowed for miles/km (up to 2 decimals).'
+                                : 'Enter a whole number for this unit'}
+                          </span>
                         </p>
                         {selectedChallengeTypeData?.suggested_min && selectedChallengeTypeData?.suggested_max && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              Suggested range: {selectedChallengeTypeData.suggested_min}-{selectedChallengeTypeData.suggested_max} {selectedChallengeTypeData.unit}
+                            <p className="text-xs sm:text-sm text-gray-600 mt-2 flex items-center gap-1.5">
+                              <svg className="w-4 h-4 text-bfrs-electric flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>Suggested range: {selectedChallengeTypeData.suggested_min}-{selectedChallengeTypeData.suggested_max} {selectedChallengeTypeData.unit}</span>
                             </p>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          About Your Challenge (Optional)
+                        <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2">
+                          About Your Challenge <span className="text-gray-500 font-normal text-xs">(Optional)</span>
                         </label>
                         <textarea
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
-                            rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric"
+                            rows={5}
+                            className="w-full px-4 py-3 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-bfrs-electric focus:border-bfrs-electric bg-white transition-colors resize-none"
                             placeholder="Share why you're taking on this challenge and how it relates to your journey with metabolic health..."
                             maxLength={500}
                         />
-                        <p className="text-xs text-gray-500 mt-1">{bio.length}/500 characters</p>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-2 text-right">{bio.length}/500 characters</p>
                       </div>
                     </div>
                   </div>
@@ -1009,55 +1031,63 @@ export default function CreateParticipant() {
             {(() => {
               const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
               return canProceed && goalAmount && (
-                  <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
-                    <div className="flex items-center mb-4">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                  <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-5 sm:mb-6">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm sm:text-base font-bold mr-3 flex-shrink-0">
                         4
                       </div>
-                      <h2 className="text-lg sm:text-xl font-semibold text-black">Email Reminders</h2>
+                      <div className="min-w-0">
+                        <h2 className="text-base sm:text-xl font-semibold text-black leading-tight">Email Reminders</h2>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Stay on track with weekly updates</p>
+                      </div>
                     </div>
 
-                    <div className="space-y-6">
-                      <div className="flex items-start space-x-3">
-                        <div className="flex items-center h-5">
+                    <div className="space-y-4 sm:space-y-6">
+                      <div className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-bfrs-electric/50 transition-colors">
+                        <div className="flex items-center h-6 pt-0.5 flex-shrink-0">
                           <input
                               id="weekly-challenge-reminders"
                               type="checkbox"
                               checked={emailRemindersOptIn}
                               onChange={(e) => setEmailRemindersOptIn(e.target.checked)}
-                              className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
+                              className="w-5 h-5 sm:w-6 sm:h-6 text-bfrs-electric bg-white border-2 border-gray-300 rounded focus:ring-2 focus:ring-bfrs-electric focus:ring-offset-2 cursor-pointer"
                           />
                         </div>
-                        <div className="text-sm">
-                          <label htmlFor="weekly-challenge-reminders" className="font-medium text-black cursor-pointer">
+                        <div className="flex-1 min-w-0">
+                          <label htmlFor="weekly-challenge-reminders" className="block text-sm sm:text-base font-semibold text-black cursor-pointer mb-1">
                             Weekly Challenge Reminders
                           </label>
-                          <p className="text-gray-600 mt-1">Get weekly email reminders to update your challenge progress.</p>
+                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Get weekly email reminders to update your challenge progress.</p>
                         </div>
                       </div>
 
-                      <div className="flex items-start space-x-3">
-                        <div className="flex items-center h-5">
+                      <div className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-bfrs-electric/50 transition-colors">
+                        <div className="flex items-center h-6 pt-0.5 flex-shrink-0">
                           <input
                               id="weekly-donor-updates"
                               type="checkbox"
                               checked={emailDonorUpdates}
                               onChange={(e) => setEmailDonorUpdates(e.target.checked)}
-                              className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
+                              className="w-5 h-5 sm:w-6 sm:h-6 text-bfrs-electric bg-white border-2 border-gray-300 rounded focus:ring-2 focus:ring-bfrs-electric focus:ring-offset-2 cursor-pointer"
                           />
                         </div>
-                        <div className="text-sm">
-                          <label htmlFor="weekly-donor-updates" className="font-medium text-black cursor-pointer">
+                        <div className="flex-1 min-w-0">
+                          <label htmlFor="weekly-donor-updates" className="block text-sm sm:text-base font-semibold text-black cursor-pointer mb-1">
                             Weekly Donor Updates
                           </label>
-                          <p className="text-gray-600 mt-1">Donors who support you will receive weekly progress updates via email.</p>
+                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Donors who support you will receive weekly progress updates via email.</p>
                         </div>
                       </div>
 
-                      <div className="text-center">
-                        <p className="text-sm text-gray-500">
-                          Weekly emails are sent every Monday at 9 AM and can be unsubscribed at any time.
-                        </p>
+                      <div className="pt-2 border-t border-gray-200">
+                        <div className="flex items-start gap-2">
+                          <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
+                            Weekly emails are sent every Monday at 9 AM and can be unsubscribed at any time.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1068,32 +1098,35 @@ export default function CreateParticipant() {
             {(() => {
               const canProceed = Boolean(selectedCategory) && (showCustom || selectedChallengeType !== null || pendingTypeName);
               return canProceed && goalAmount && (
-                  <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-200">
-                    <div className="flex items-center mb-4">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-xs sm:text-sm font-bold mr-3">
+                  <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-5 sm:mb-6">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-bfrs-electric text-black rounded-full flex items-center justify-center text-sm sm:text-base font-bold mr-3 flex-shrink-0">
                         5
                       </div>
-                      <h2 className="text-lg sm:text-xl font-semibold text-black">Health & Safety Confirmation</h2>
+                      <div className="min-w-0">
+                        <h2 className="text-base sm:text-xl font-semibold text-black leading-tight">Health & Safety Confirmation</h2>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Important safety information</p>
+                      </div>
                     </div>
 
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                      <div className="flex items-start">
+                    <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 sm:p-5 mb-5 sm:mb-6">
+                      <div className="flex items-start gap-3">
                         <div className="flex-shrink-0">
-                          <svg className="w-5 h-5 text-orange-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
                         </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-orange-800">Important Health Notice</h3>
-                          <p className="text-sm text-orange-700 mt-1">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm sm:text-base font-semibold text-orange-900 mb-1">Important Health Notice</h3>
+                          <p className="text-xs sm:text-sm text-orange-800 leading-relaxed">
                             Please ensure you are physically capable of completing your chosen challenge safely.
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-start space-x-3">
-                      <div className="flex items-center h-5">
+                    <div className="flex items-start gap-3 sm:gap-4 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+                      <div className="flex items-center h-6 pt-0.5 flex-shrink-0">
                         <input
                             id="health-confirmation"
                             type="checkbox"
@@ -1102,11 +1135,11 @@ export default function CreateParticipant() {
                               console.log('Health checkbox changed:', e.target.checked);
                               setHealthConfirmed(Boolean(e.target.checked));
                             }}
-                            className="w-4 h-4 text-bfrs-electric bg-gray-100 border-gray-300 rounded focus:ring-bfrs-electric focus:ring-2"
+                            className="w-5 h-5 sm:w-6 sm:h-6 text-bfrs-electric bg-white border-2 border-gray-300 rounded focus:ring-2 focus:ring-bfrs-electric focus:ring-offset-2 cursor-pointer"
                         />
                       </div>
-                      <div className="text-sm">
-                        <label htmlFor="health-confirmation" className="font-medium text-black cursor-pointer">
+                      <div className="flex-1 min-w-0">
+                        <label htmlFor="health-confirmation" className="text-xs sm:text-sm font-medium text-black cursor-pointer leading-relaxed block">
                           I confirm I am physically fit and in good health to participate in my selected challenge. If I have concerns about my health or abilities, I will consult a healthcare provider before participating. By checking this box, I release Brain Fog Recovery Source from responsibility related to my participation.
                         </label>
                       </div>
