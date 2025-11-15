@@ -84,11 +84,11 @@ function ProgressDetails({
       <div className="space-y-3">
         {progressEntries.map((entry) => (
             <div key={entry.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex flex-wrap gap-2 justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-2">
                 <div className="font-medium text-gray-900">{entry.units_completed} units completed</div>
                 <div className="text-sm text-gray-500">{new Date(entry.log_date).toLocaleDateString()}</div>
               </div>
-              {entry.notes && <div className="text-gray-700 text-sm mt-2 break-words whitespace-pre-wrap">"{entry.notes}"</div>}
+              {entry.notes && <div className="text-gray-700 text-sm mt-2">"{entry.notes}"</div>}
               <div className="text-xs text-gray-500 mt-1">
                 Logged on {new Date(entry.created_at).toLocaleDateString()}
               </div>
@@ -524,8 +524,8 @@ export default function Participant() {
                       className="w-10 h-10 rounded-lg mr-3"
                   />
                   <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-black">Brain Fog Recovery Source</h1>
-                    <p className="text-gray-600 text-sm sm:text-base">Loading Challenge...</p>
+                    <h1 className="text-2xl font-bold text-black">Brain Fog Recovery Source</h1>
+                    <p className="text-gray-600">Loading Challenge...</p>
                   </div>
                 </div>
               </div>
@@ -535,13 +535,13 @@ export default function Participant() {
           <div className="flex items-center justify-center min-h-[60vh] px-4">
             <div className="text-center">
               <div className="relative mb-6">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 border-4 border-bfrs-200 border-t-bfrs-electric rounded-full animate-spin mx-auto"></div>
-                <div className="absolute inset-0 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-bfrs-50 opacity-20 animate-pulse mx-auto"></div>
+                <div className="w-16 h-16 border-4 border-bfrs-200 border-t-bfrs-electric rounded-full animate-spin mx-auto"></div>
+                <div className="absolute inset-0 w-16 h-16 rounded-full bg-bfrs-50 opacity-20 animate-pulse mx-auto"></div>
               </div>
-              <h2 className="text-lg sm:text-xl font-semibold text-black mb-2">Loading Challenge Data</h2>
-              <p className="text-gray-600 mb-4 text-sm sm:text-base">Please wait while we fetch the latest progress...</p>
+              <h2 className="text-xl font-semibold text-black mb-2">Loading Challenge Data</h2>
+              <p className="text-gray-600 mb-4">Please wait while we fetch the latest progress...</p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-md mx-auto">
-                <p className="text-blue-800 text-xs sm:text-sm">
+                <p className="text-blue-800 text-sm">
                   <strong>Taking longer than expected?</strong> Try refreshing the page or check your internet connection.
                 </p>
               </div>
@@ -553,10 +553,10 @@ export default function Participant() {
 
   if (error || !participant) {
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-          <div className="text-center max-w-md">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Campaign Not Found</h2>
-            <p className="text-gray-600 mb-4 text-sm sm:text-base">{error || 'This participant campaign does not exist.'}</p>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Campaign Not Found</h2>
+            <p className="text-gray-600 mb-4">{error || 'This participant campaign does not exist.'}</p>
             <Link
                 to="/dashboard"
                 className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -595,75 +595,68 @@ export default function Participant() {
   };
 
   // Helper: singularize unit for per-unit labels (fallback if slice would blank it)
-  const unitSingular = (participant?.unit || 'unit').slice(0, -1) || (participant?.unit || 'unit');
+  const unitSingular =
+      (participant?.unit || 'unit').slice(0, -1) || (participant?.unit || 'unit');
 
   return (
-      <div className="min-h-screen bg-white overflow-x-hidden">
+      <div className="min-h-screen bg-white">
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <button
-                  onClick={() => navigate(-1)}
-                  className="mr-2 sm:mr-4 p-2 -ml-2 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Go back"
-              >
+            <div className="flex items-center">
+              <button onClick={() => navigate(-1)} className="mr-4 p-2 text-gray-400 hover:text-gray-600 transition-colors">
                 <ArrowLeft className="w-6 h-6" />
               </button>
-              <div className="flex items-start sm:items-center flex-1">
+              <div className="flex items-center">
                 <img
                     src="https://mocha-cdn.com/019870bf-4695-74f8-b344-315629bf7f9f/BFRS_Logo_Square_Original.jpg"
                     alt="Brain Fog Recovery Source Logo"
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg mr-3 flex-shrink-0"
+                    className="w-10 h-10 rounded-lg mr-3"
                 />
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
-                  <div className="min-w-0">
-                    <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-black leading-snug">
-                      <span className="sm:hidden">BFRS Challenges</span>
-                      <span className="hidden sm:inline">Brain Fog Recovery Source - Metabolic Challenges</span>
-                    </h1>
-                    <p className="text-gray-600 text-sm sm:text-base truncate">{participant.challenge_name} Challenge</p>
+                <div className="flex items-center">
+                  <div>
+                    <h1 className="text-2xl font-bold text-black">Brain Fog Recovery Source - Metabolic Challenges</h1>
+                    <p className="text-gray-600">{participant.challenge_name} Challenge</p>
                   </div>
-                  <div className="mt-2 sm:mt-0 sm:ml-4">
-                    <FollowButton participantId={participant.id} className="ml-0 sm:ml-3" />
+                  <div className="ml-4">
+                    <FollowButton participantId={participant.id} className="ml-3" />
                   </div>
+
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-28 sm:pb-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* PROMINENT PLEDGE SECTION */}
           {!isOwner && (
               <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-8 mb-8 text-gray-900 shadow-sm">
                 <div className="text-center">
                   <div className="flex flex-col sm:flex-row items-center justify-center mb-6">
-                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-bfrs-electric rounded-full flex items-center justify-center mb-4 sm:mb-0 sm:mr-4">
-                      <Heart className="w-7 h-7 sm:w-12 sm:h-12 text-black" />
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-bfrs-electric rounded-full flex items-center justify-center mb-4 sm:mb-0 sm:mr-4">
+                      <Heart className="w-8 h-8 sm:w-12 sm:h-12 text-black" />
                     </div>
-                    <div className="px-2">
-                      <h2 className="text-xl sm:text-4xl font-bold mb-2 text-black leading-tight">PLEDGE TO THIS CAMPAIGN!</h2>
-                      <p className="text-gray-600 text-sm sm:text-xl">
-                        Support this amazing {participant.challenge_name} challenge!
-                      </p>
+                    <div>
+                      <h2 className="text-2xl sm:text-4xl font-bold mb-2 text-black">PLEDGE TO THIS CAMPAIGN!</h2>
+                      <p className="text-gray-600 text-lg sm:text-xl">Support this amazing {participant.challenge_name} challenge!</p>
                     </div>
                   </div>
 
-                  <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                  <div className="bg-white border border-gray-200 rounded-xl p-6 mb-8">
+                    <div className="grid md:grid-cols-3 gap-6 text-center">
                       <div>
-                        <div className="text-2xl sm:text-3xl font-bold break-words">{participant.current_progress}</div>
-                        <div className="text-gray-600 text-sm sm:text-base">{participant.unit} completed</div>
+                        <div className="text-3xl font-bold">{participant.current_progress}</div>
+                        <div className="text-gray-600">{participant.unit} completed</div>
                       </div>
                       <div>
-                        <div className="text-2xl sm:text-3xl font-bold break-words">{participant.goal_amount}</div>
-                        <div className="text-gray-600 text-sm sm:text-base">{participant.unit} goal</div>
+                        <div className="text-3xl font-bold">{participant.goal_amount}</div>
+                        <div className="text-gray-600">{participant.unit} goal</div>
                       </div>
                       <div>
-                        <div className="text-2xl sm:text-3xl font-bold">
+                        <div className="text-3xl font-bold">
                           ${(Number(participant?.total_raised) || 0).toFixed(0)}
                         </div>
-                        <div className="text-gray-600 text-sm sm:text-base">raised so far</div>
+                        <div className="text-gray-600">raised so far</div>
                       </div>
                     </div>
                   </div>
@@ -674,10 +667,10 @@ export default function Participant() {
                         <div className="w-12 h-12 sm:w-16 sm:h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-3">
                           <Target className="w-6 h-6 sm:w-8 sm:h-8 text-bfrs-electric" />
                         </div>
-                        <h3 className="text-lg sm:text-2xl font-bold mb-2 text-black">
+                        <h3 className="text-xl sm:text-2xl font-bold mb-2 text-black">
                           Pledge Per {unitSingular}
                         </h3>
-                        <p className="text-gray-600 text-xs sm:text-sm">
+                        <p className="text-gray-600 text-sm">
                           Support them for every {unitSingular} they complete!
                         </p>
                       </div>
@@ -697,8 +690,8 @@ export default function Participant() {
                         <div className="w-12 h-12 sm:w-16 sm:h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-3">
                           <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-bfrs-electric" />
                         </div>
-                        <h3 className="text-lg sm:text-2xl font-bold mb-2 text-black">One-Time Donation</h3>
-                        <p className="text-gray-600 text-xs sm:text-sm">Make a direct donation to Brain Fog Recovery Source</p>
+                        <h3 className="text-xl sm:text-2xl font-bold mb-2 text-black">One-Time Donation</h3>
+                        <p className="text-gray-600 text-sm">Make a direct donation to Brain Fog Recovery Source</p>
                       </div>
                       <button
                           onClick={() => {
@@ -714,7 +707,7 @@ export default function Participant() {
                     </div>
                   </div>
 
-                  <div className="mt-8 bg-gray-50 rounded-lg p-4 border border-gray-200 text-left">
+                  <div className="mt-8 bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <p className="text-gray-800 text-sm">
                       <strong>How Pledging Works:</strong> Choose an amount per {unitSingular} completed. You'll be notified
                       when the challenge ends to fulfill your pledge. All funds support psychiatric recovery access through
@@ -725,23 +718,21 @@ export default function Participant() {
               </div>
           )}
 
-          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-8 text-gray-900 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-                  <div className="min-w-0">
-                    <h2 className="text-2xl sm:text-3xl font-bold mb-1 break-words">
-                      {participant.challenge_name}
-                    </h2>
-                    <p className="text-gray-600 text-sm sm:text-base">
+              <div className="bg-white border border-gray-200 rounded-xl p-8 text-gray-900 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2">{participant.challenge_name}</h2>
+                    <p className="text-gray-600">
                       Goal: {participant.goal_amount} {participant.unit}
                     </p>
-                    <p className="text-base sm:text-lg font-bold text-bfrs-electric mb-1">
+                    <p className="text-lg font-bold text-bfrs-electric mb-2">
                       {participant.participant_name || 'Unknown'}'s Challenge
                     </p>
                     {(participant.challenge_name !== participant.original_challenge_name ||
                         participant.unit !== participant.original_unit) && (
-                        <p className="text-gray-500 text-xs sm:text-sm mt-1">
+                        <p className="text-gray-500 text-sm mt-1">
                           Based on: {participant.original_challenge_name}
                           {participant.suggested_min != null && participant.suggested_max != null && (
                               <span>
@@ -752,66 +743,64 @@ export default function Participant() {
                         </p>
                     )}
                   </div>
-                  <div className="text-left sm:text-right">
-                    <div className="text-3xl sm:text-4xl font-bold">{participant.current_progress}</div>
-                    <div className="text-gray-600 text-sm sm:text-base">completed</div>
+                  <div className="text-right">
+                    <div className="text-4xl font-bold">{participant.current_progress}</div>
+                    <div className="text-gray-600">completed</div>
                   </div>
                 </div>
 
                 <div className="mb-6">
-                  <div className="flex justify-between text-xs sm:text-sm mb-2">
+                  <div className="flex justify-between text-sm mb-2">
                     <span>Progress</span>
                     <span>{Math.round(progressPercentage)}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 sm:h-3">
+                  <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
-                        className="bg-bfrs-electric h-2.5 sm:h-3 rounded-full transition-all duration-500 ease-out"
+                        className="bg-bfrs-electric h-3 rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${progressPercentage}%` }}
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex flex-wrap gap-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex space-x-6">
                     <div>
-                      <div className="text-xl sm:text-2xl font-bold">{participant?.donor_count || 0}</div>
-                      <div className="text-gray-700 text-xs sm:text-sm">Supporters</div>
+                      <div className="text-2xl font-bold">{participant?.donor_count || 0}</div>
+                      <div className="text-gray-700 text-sm">Supporters</div>
                     </div>
                     <div>
-                      <div className="text-xl sm:text-2xl font-bold">
+                      <div className="text-2xl font-bold">
                         ${(Number(participant?.total_raised) || 0).toFixed(2)}
                       </div>
-                      <div className="text-gray-700 text-xs sm:text-sm">Raised So Far</div>
-                      <div className="text-gray-600 text-[11px] sm:text-xs">
+                      <div className="text-gray-700 text-sm">Raised So Far</div>
+                      <div className="text-gray-600 text-xs">
                         ${(Number(participant?.total_potential) || 0).toFixed(2)} potential
                       </div>
                     </div>
                   </div>
-
                   {!isOwner && (
                       <div className="text-center">
                         <button
                             onClick={() => setShowPledgeForm(true)}
-                            className="bg-bfrs-electric text-black px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold sm:font-bold text-base sm:text-lg hover:bg-bfrs-electric-dark transition-colors flex items-center mx-auto shadow-sm"
+                            className="bg-bfrs-electric text-black px-8 py-4 rounded-lg font-bold text-lg hover:bg-bfrs-electric-dark transition-colors flex items-center mx-auto shadow-sm"
                         >
-                          <Heart className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                          <Heart className="w-6 h-6 mr-2" />
                           Support This Challenge
                         </button>
-                        <p className="text-gray-600 text-xs sm:text-sm mt-2">
+                        <p className="text-gray-600 text-sm mt-2">
                           Pledge per unit completed or make a one-time donation
                         </p>
                       </div>
                   )}
-
                   {isOwner && (
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex space-x-3">
                         <button
                             onClick={() => {
                               const today = new Date().toISOString().split('T')[0];
                               setProgressForm({ units_completed: '', log_date: today, notes: '', selected_dates: [], image: null });
                               setShowProgressForm(true);
                             }}
-                            className="bg-bfrs-electric text-black px-5 sm:px-6 py-3 rounded-lg font-semibold hover:bg-bfrs-electric-dark transition-colors flex items-center justify-center"
+                            className="bg-bfrs-electric text-black px-6 py-3 rounded-lg font-semibold hover:bg-bfrs-electric-dark transition-colors flex items-center"
                         >
                           <Plus className="w-5 h-5 mr-2" />
                           Log Progress
@@ -828,38 +817,37 @@ export default function Participant() {
               </div>
 
               <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="p-4 sm:p-6 border-b border-gray-200">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Recent Updates</h3>
+                <div className="p-6 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Recent Updates</h3>
                 </div>
-                <div className="p-4 sm:p-6">
+                <div className="p-6">
                   {participant.posts.length === 0 ? (
                       <div className="text-center py-8">
-                        <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-500 text-sm sm:text-base">No updates yet</p>
+                        <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-gray-500">No updates yet</p>
                       </div>
                   ) : (
                       <div className="space-y-6">
                         {participant.posts.map((post) => (
                             <div key={post.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                               <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium text-gray-700">
                             {new Date(post.created_at).toLocaleDateString()}
                           </span>
                               </div>
 
                               <div className={`${post.image_url ? 'md:flex md:space-x-4' : ''}`}>
                                 <div className={`${post.image_url ? 'md:flex-1' : ''}`}>
-                                  <p className="text-gray-700 leading-relaxed break-words whitespace-pre-wrap text-sm sm:text-base">
-                                    {post.content}
-                                  </p>
+                                  <p className="text-gray-700 leading-relaxed">{post.content}</p>
                                 </div>
 
                                 {post.image_url && (
                                     <div className="mt-3 md:mt-0 md:flex-shrink-0">
                                       <img
                                           src={post.image_url}
-                                          alt="Progress update image"
-                                          className="w-full md:w-48 h-auto rounded-lg border border-gray-200 shadow-sm object-cover max-h-56 sm:max-h-72"
+                                          alt="Progress update"
+                                          className="w-full md:w-48 h-auto rounded-lg border border-gray-200 shadow-sm object-cover"
+                                          style={{ maxHeight: '300px' }}
                                       />
                                     </div>
                                 )}
@@ -872,19 +860,17 @@ export default function Participant() {
               </div>
 
               {participant.bio && (
-                  <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">About This Fundraising Challenge</h3>
-                    <p className="text-gray-600 leading-relaxed text-sm sm:text-base break-words whitespace-pre-wrap">
-                      {participant.bio}
-                    </p>
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">About This Fundraising Challenge</h3>
+                    <p className="text-gray-600 leading-relaxed">{participant.bio}</p>
                   </div>
               )}
 
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-                <div className="p-4 sm:p-6 border-b border-gray-200">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Progress Details</h3>
+                <div className="p-6 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Progress Details</h3>
                 </div>
-                <div className="p-4 sm:p-6">
+                <div className="p-6">
                   <ProgressDetails participantId={participant.id} refreshTrigger={progressRefreshTrigger} />
                 </div>
               </div>
@@ -895,10 +881,10 @@ export default function Participant() {
               <div className="grid grid-cols-1 gap-4">
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                   <div className="flex items-center">
-                    <Target className="w-7 h-7 sm:w-8 sm:h-8 text-black mr-3" />
+                    <Target className="w-8 h-8 text-black mr-3" />
                     <div>
-                      <p className="text-xs sm:text-sm text-gray-500">Progress</p>
-                      <p className="text-lg sm:text-xl font-bold text-black">
+                      <p className="text-sm text-gray-500">Progress</p>
+                      <p className="text-xl font-bold text-black">
                         {participant?.current_progress || 0}/{participant?.goal_amount || 0}
                       </p>
                     </div>
@@ -907,20 +893,20 @@ export default function Participant() {
 
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                   <div className="flex items-center">
-                    <Users className="w-7 h-7 sm:w-8 sm:h-8 text-black mr-3" />
+                    <Users className="w-8 h-8 text-black mr-3" />
                     <div>
-                      <p className="text-xs sm:text-sm text-gray-500">Supporters</p>
-                      <p className="text-lg sm:text-xl font-bold text-black">{participant.donor_count}</p>
+                      <p className="text-sm text-gray-500">Supporters</p>
+                      <p className="text-xl font-bold text-black">{participant.donor_count}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                   <div className="flex items-center">
-                    <DollarSign className="w-7 h-7 sm:w-8 sm:h-8 text-black mr-3" />
+                    <DollarSign className="w-8 h-8 text-black mr-3" />
                     <div>
-                      <p className="text-xs sm:text-sm text-gray-500">Total Raised</p>
-                      <p className="text-lg sm:text-xl font-bold text-black">
+                      <p className="text-sm text-gray-500">Total Raised</p>
+                      <p className="text-xl font-bold text-black">
                         ${(Number(participant.total_raised) || 0).toFixed(2)}
                       </p>
                     </div>
@@ -928,14 +914,14 @@ export default function Participant() {
                 </div>
               </div>
 
-              {/* Follow-scoped recent activity feed lives here */}
+              {/* Follow-scoped recent activity feed lives here (not inside ProgressDetails) */}
               <aside className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-                <h4 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base">Recent Activity</h4>
+                <h4 className="font-semibold text-gray-900 mb-3">Recent Activity</h4>
                 <RecentActivityFeed participantId={String(participant.id)} />
               </aside>
 
               <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-bfrs-electric rounded-full flex items-center justify-center mr-3">
                       <span className="text-lg">📅</span>
@@ -947,15 +933,15 @@ export default function Participant() {
                   </div>
                   <button
                       onClick={handleCalendarReminder}
-                      className="bg-bfrs-electric text-black px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold hover:bg-bfrs-electric-dark transition-colors shadow-sm"
+                      className="bg-bfrs-electric text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-bfrs-electric-dark transition-colors shadow-sm"
                   >
                     📅 Add to Calendar
                   </button>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
-                <h3 className="text-base sm:text-lg font-semibold text-black mb-4">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-black mb-4">
                   {isOwner ? 'Share Your Campaign' : 'Share This Campaign'}
                 </h3>
 
@@ -971,7 +957,7 @@ export default function Participant() {
                         }}
                         className="bg-[#0077B5] text-white px-3 py-2.5 rounded-lg hover:bg-[#005885] transition-colors flex items-center justify-center text-sm font-medium"
                     >
-                      <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                       </svg>
                       LinkedIn
@@ -981,7 +967,7 @@ export default function Participant() {
                         onClick={() => shareToFacebook(window.location.href)}
                         className="bg-[#1877F2] text-white px-3 py-2.5 rounded-lg hover:bg-[#166FE5] transition-colors flex items-center justify-center text-sm font-medium"
                     >
-                      <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                       </svg>
                       Facebook
@@ -998,7 +984,7 @@ export default function Participant() {
                 </div>
 
                 <div className="mt-3 text-center">
-                  <p className="text-xs sm:text-sm text-gray-500">
+                  <p className="text-sm text-gray-500">
                     {isOwner
                         ? 'Share directly to LinkedIn or Facebook, or get a QR code to print'
                         : 'Help spread the word about this challenge to your network'}
@@ -1006,24 +992,24 @@ export default function Participant() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
-                <h3 className="text-base sm:text-lg font-semibold text-black mb-4">Campaign Details</h3>
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-black mb-4">Campaign Details</h3>
                 <div className="space-y-3 text-sm">
-                  <div className="flex flex-wrap gap-2 justify-between items-start">
+                  <div className="flex justify-between items-start">
                     <span className="text-gray-500">Challenge</span>
-                    <span className="text-black font-medium text-right break-words">{participant?.challenge_name || 'N/A'}</span>
+                    <span className="text-black font-medium text-right">{participant?.challenge_name || 'N/A'}</span>
                   </div>
-                  <div className="flex flex-wrap gap-2 justify-between">
+                  <div className="flex justify-between">
                     <span className="text-gray-500">Unit</span>
                     <span className="text-black">{participant?.unit || 'N/A'}</span>
                   </div>
-                  <div className="flex flex-wrap gap-2 justify-between">
+                  <div className="flex justify-between">
                     <span className="text-gray-500">Started</span>
                     <span className="text-black">
                     {participant?.created_at ? new Date(participant.created_at).toLocaleDateString() : 'N/A'}
                   </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 justify-between">
+                  <div className="flex justify-between">
                     <span className="text-gray-500">Status</span>
                     <span className="text-bfrs-electric font-medium">Active</span>
                   </div>
@@ -1031,31 +1017,11 @@ export default function Participant() {
               </div>
             </div>
           </div>
-
-          {/* Sticky mobile CTA */}
-          {!isOwner && (
-              <div className="md:hidden fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(env(safe-area-inset-bottom,0)+8px)]">
-                <div className="rounded-xl shadow-lg border border-gray-200 bg-white p-3 flex items-center gap-3">
-                  <button
-                      onClick={() => setShowPledgeForm(true)}
-                      className="flex-1 bg-bfrs-electric text-black py-3 rounded-lg font-semibold hover:bg-bfrs-electric-dark transition-colors"
-                  >
-                    Support
-                  </button>
-                  <button
-                      onClick={() => setShowShareModal(true)}
-                      className="px-3 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                  >
-                    Share
-                  </button>
-                </div>
-              </div>
-          )}
         </div>
 
         {/* Modals */}
         {showPledgeForm && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
               <div className="bg-white rounded-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold text-gray-900">Make a Pledge</h3>
@@ -1064,7 +1030,6 @@ export default function Participant() {
                       onClick={() => setShowPledgeForm(false)}
                       className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                       title="Close"
-                      aria-label="Close pledge form"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1238,7 +1203,7 @@ export default function Participant() {
                         </div>
                       </div>
                   )}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <div className="flex space-x-3 pt-4">
                     <button
                         type="button"
                         onClick={() => setShowPledgeForm(false)}
@@ -1260,7 +1225,7 @@ export default function Participant() {
         )}
 
         {showProgressForm && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
               <div className="bg-white rounded-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold text-gray-900">Update Your Progress</h3>
@@ -1273,7 +1238,6 @@ export default function Participant() {
                       }}
                       className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                       title="Close"
-                      aria-label="Close progress form"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1331,7 +1295,7 @@ export default function Participant() {
                         className="w-full"
                     />
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <div className="flex space-x-3 pt-4">
                     <button
                         type="button"
                         onClick={() => {
@@ -1357,7 +1321,7 @@ export default function Participant() {
         )}
 
         {showCalendarOption && participant && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
               <div className="bg-white rounded-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
                 <div className="text-center mb-6">
                   <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">📅</div>
@@ -1374,7 +1338,7 @@ export default function Participant() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex space-x-3">
                   <button
                       type="button"
                       onClick={handleCalendarOptOut}
@@ -1408,11 +1372,11 @@ export default function Participant() {
         )}
 
         {showSuccessShareModal && participant && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
               <div className="bg-white rounded-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
                 <div className="text-center mb-6">
                   <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -1443,14 +1407,14 @@ export default function Participant() {
         )}
 
         {showEndCampaignModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
               <div className="bg-white rounded-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">End Campaign</h3>
                 <p className="text-gray-600 mb-6">
                   Are you sure you want to end this fundraising campaign? This will mark it as completed and allow you to
                   start a new campaign in the future. This action cannot be undone.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex space-x-3">
                   <button
                       type="button"
                       onClick={() => setShowEndCampaignModal(false)}
