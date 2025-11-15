@@ -103,43 +103,43 @@ export default function EmailReminderSettings() {
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <Mail className="w-6 h-6 text-bfrs-electric mr-3" />
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Email Reminders</h3>
-            <p className="text-sm text-gray-600">Manage your weekly email reminder preferences</p>
-          </div>
+    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+      <div className="flex items-center mb-5 sm:mb-6">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-bfrs-electric/10 rounded-lg flex items-center justify-center flex-shrink-0 mr-3 sm:mr-4">
+          <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-bfrs-electric" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 leading-tight">Email Reminders</h3>
+          <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Manage your weekly email reminder preferences</p>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center">
-            <X className="w-4 h-4 text-red-600 mr-2" />
-            <p className="text-red-800 text-sm">{error}</p>
+        <div className="mb-4 sm:mb-5 p-3 sm:p-4 bg-red-50 border-2 border-red-200 rounded-lg">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-red-800 text-xs sm:text-sm leading-relaxed flex-1">{error}</p>
           </div>
         </div>
       )}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center">
-            <Check className="w-4 h-4 text-green-600 mr-2" />
-            <p className="text-green-800 text-sm">{success}</p>
+        <div className="mb-4 sm:mb-5 p-3 sm:p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <p className="text-green-800 text-xs sm:text-sm leading-relaxed flex-1">{success}</p>
           </div>
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Challenge Reminders */}
-        <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-          <div>
-            <h4 className="font-medium text-gray-900">Weekly Challenge Reminders</h4>
-            <p className="text-sm text-gray-600">Get reminded via email to update your progress on your active challenges</p>
+        <div className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 bg-gray-50 border-2 border-gray-200 rounded-lg hover:border-bfrs-electric/50 transition-colors">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1.5 sm:mb-2">Weekly Challenge Reminders</h4>
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Get reminded via email to update your progress on your active challenges</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
             <input
               type="checkbox"
               checked={preferences.email_challenge_reminders}
@@ -147,17 +147,17 @@ export default function EmailReminderSettings() {
               disabled={updating}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-bfrs-electric/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-bfrs-electric"></div>
+            <div className="w-12 h-7 sm:w-14 sm:h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-bfrs-electric/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border-2 after:rounded-full after:h-6 after:w-6 sm:after:h-7 sm:after:w-7 after:transition-all peer-checked:bg-bfrs-electric shadow-inner"></div>
           </label>
         </div>
 
         {/* Donor Updates */}
-        <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-          <div>
-            <h4 className="font-medium text-gray-900">Weekly Donor Updates</h4>
-            <p className="text-sm text-gray-600">Get updates via email on campaigns you've pledged to support</p>
+        <div className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 bg-gray-50 border-2 border-gray-200 rounded-lg hover:border-bfrs-electric/50 transition-colors">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-1.5 sm:mb-2">Weekly Donor Updates</h4>
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">Get updates via email on campaigns you've pledged to support</p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
             <input
               type="checkbox"
               checked={preferences.email_donor_updates}
@@ -165,38 +165,43 @@ export default function EmailReminderSettings() {
               disabled={updating}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-bfrs-electric/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-bfrs-electric"></div>
+            <div className="w-12 h-7 sm:w-14 sm:h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-bfrs-electric/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border-2 after:rounded-full after:h-6 after:w-6 sm:after:h-7 sm:after:w-7 after:transition-all peer-checked:bg-bfrs-electric shadow-inner"></div>
           </label>
         </div>
 
-        <div className="pt-4 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-sm text-gray-500">
-              <Mail className="w-4 h-4 mr-2" />
-              <span>Weekly emails are sent every Monday at 9 AM. You can unsubscribe anytime.</span>
+        <div className="pt-4 sm:pt-5 border-t-2 border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-start gap-2 text-xs sm:text-sm text-gray-500">
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+              <span className="leading-relaxed">Weekly emails are sent every Monday at 9 AM. You can unsubscribe anytime.</span>
             </div>
             <button
               onClick={handleTestEmail}
               disabled={testingEmail || !preferences.email_challenge_reminders}
-              className="flex items-center px-4 py-2 bg-bfrs-electric text-black text-sm font-medium rounded-lg hover:bg-bfrs-electric-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-bfrs-electric text-black text-sm sm:text-base font-semibold rounded-lg hover:bg-bfrs-electric-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm whitespace-nowrap"
             >
               {testingEmail ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Sending...
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
+                  <span>Sending...</span>
                 </>
               ) : (
                 <>
-                  <Mail className="w-4 h-4 mr-2" />
-                  Send Test Email
+                  <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <span>Send Test Email</span>
                 </>
               )}
             </button>
           </div>
           {!preferences.email_challenge_reminders && (
-            <p className="text-xs text-orange-600 mt-2">
-              Enable challenge reminders above to test the email functionality
-            </p>
+            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-xs sm:text-sm text-orange-700 flex items-start gap-1.5">
+                <svg className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Enable challenge reminders above to test the email functionality</span>
+              </p>
+            </div>
           )}
         </div>
       </div>
